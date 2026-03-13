@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../components/Firebase';
-import { collection, getDocs, query, orderBy, doc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { Search, SlidersHorizontal, Heart, Eye, Plus, Sparkles, X, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../components/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import QuickView from '../components/QuickView';
+import SEO from '../components/SEO';
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
@@ -14,7 +14,6 @@ const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -44,6 +43,17 @@ const Shop = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] pt-32 pb-24 px-6">
+      <SEO
+        title="Shop | Leaf Burst Organic Formulations"
+        description="Browse organic powders, superfoods, and herbal blends. Clean, lab-tested, and crafted for real bioavailability."
+        canonical={typeof window !== 'undefined' ? `${window.location.origin}/shop` : undefined}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Leaf Burst Shop",
+          "url": typeof window !== 'undefined' ? `${window.location.origin}/shop` : "https://example.com/shop"
+        }}
+      />
       <AnimatePresence>
         {selectedProduct && (
           <QuickView 

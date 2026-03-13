@@ -1,9 +1,21 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Send, Instagram, Twitter, MessageCircle, Clock, ArrowRight } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const Contact = () => {
   return (
     <div className="min-h-screen bg-[#F7F6F2] pt-32 pb-24 px-6">
+      <SEO
+        title="Contact | Leaf Burst"
+        description="Get in touch with Leaf Burst. Questions on products, orders, or wholesale? We respond within 24 hours."
+        canonical={typeof window !== 'undefined' ? `${window.location.origin}/contact` : undefined}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ContactPage",
+          "name": "Contact Leaf Burst",
+          "url": typeof window !== 'undefined' ? `${window.location.origin}/contact` : "https://example.com/contact"
+        }}
+      />
       <div className="max-w-[1300px] mx-auto space-y-8">
         
         {/* --- HEADER POD --- */}

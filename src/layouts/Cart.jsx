@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../components/useAuth";
 import { db } from "../components/Firebase";
 import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag, Trash2, ArrowLeft, ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import SEO from "../components/SEO";
 
 const Cart = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -73,6 +75,18 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] pt-32 pb-20 px-6">
+      <SEO
+        title="Cart | Leaf Burst"
+        description="Review items in your Leaf Burst cart and proceed to checkout."
+        canonical={typeof window !== 'undefined' ? `${window.location.origin}/cart` : undefined}
+        noindex={true}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ShoppingCartPage",
+          "name": "Leaf Burst Cart",
+          "url": typeof window !== 'undefined' ? `${window.location.origin}/cart` : "https://example.com/cart"
+        }}
+      />
       <div className="max-w-[1300px] mx-auto">
         <div className="flex flex-col lg:flex-row gap-16">
           
@@ -154,6 +168,7 @@ const Cart = () => {
 
               <button 
                 disabled={items.length === 0}
+                onClick={() => navigate('/checkout')}
                 className="w-full py-5 rounded-2xl bg-[#6E8B3D] text-white font-black text-lg hover:bg-[#1E3D2B] transition-all transform active:scale-[0.98] disabled:opacity-30 disabled:pointer-events-none shadow-xl shadow-[#6E8B3D]/20 mb-8"
               >
                 Complete Checkout

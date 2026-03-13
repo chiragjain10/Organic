@@ -19,6 +19,13 @@ import Contact from "./pages/Contact";
 import Shop from "./pages/Shop";
 import ScrollToTop from "./components/ScrollToTop";
 import Preloader from "./pages/Preloader";
+import ShopDataProvider from "./components/ShopDataProvider";
+import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
+import Addresses from "./pages/Addresses";
+import PaymentMethods from "./pages/PaymentMethods";
+import Notifications from "./pages/Notifications";
+import Profile from "./pages/Profile";
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -42,6 +49,12 @@ const AppRoutes = () => {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/account/profile" element={<Profile />} />
+        <Route path="/account/addresses" element={<Addresses />} />
+        <Route path="/account/payments" element={<PaymentMethods />} />
+        <Route path="/account/notifications" element={<Notifications />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/product/:id/quickview" element={<QuickView />} />
       </Routes>
@@ -57,9 +70,11 @@ function App() {
     <>
       {!isPreloaderDone && <Preloader onComplete={() => setIsPreloaderDone(true)} />}
       <AuthProvider>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <ShopDataProvider>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </ShopDataProvider>
       </AuthProvider>
     </>
   );

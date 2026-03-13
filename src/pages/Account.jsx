@@ -16,6 +16,7 @@ import {
   Bell,
   Award
 } from "lucide-react";
+import SEO from "../components/SEO";
 
 const Account = () => {
   const { user, logout } = useAuth();
@@ -83,6 +84,18 @@ const Account = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] pt-32 pb-20 px-6">
+      <SEO
+        title="Account | Leaf Burst"
+        description="Manage your Leaf Burst account, orders, and saved items."
+        canonical={typeof window !== 'undefined' ? `${window.location.origin}/account` : undefined}
+        noindex={true}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ProfilePage",
+          "name": "Leaf Burst Account",
+          "url": typeof window !== 'undefined' ? `${window.location.origin}/account` : "https://example.com/account"
+        }}
+      />
       <div className="max-w-[1300px] mx-auto">
         
         {/* Profile Header Card */}
@@ -154,17 +167,17 @@ const Account = () => {
             </div>
 
             {/* Navigation Menu */}
-            <div className="bg-[#F7F6F2] rounded-[48px] border border-[#6E8B3D]/30 shadow-sm overflow-hidden p-4">
+              <div className="bg-[#F7F6F2] rounded-[48px] border border-[#6E8B3D]/30 shadow-sm overflow-hidden p-4">
               <h3 className="px-6 py-4 text-xs font-black text-[#6B4F3F] uppercase tracking-[0.3em]">Account Management</h3>
               <div className="space-y-1">
                 {[
-                  { icon: Settings, label: "Profile Settings", color: "text-[#2F6F4E]", bg: "bg-[#2F6F4E]/5" },
-                  { icon: Package, label: "Order History", color: "text-[#2F6F4E]", bg: "bg-[#2F6F4E]/5" },
-                  { icon: CreditCard, label: "Payment Methods", color: "text-[#2F6F4E]", bg: "bg-[#2F6F4E]/5" },
-                  { icon: MapPin, label: "Saved Addresses", color: "text-[#2F6F4E]", bg: "bg-[#2F6F4E]/5" },
-                  { icon: Bell, label: "Notifications", color: "text-[#2F6F4E]", bg: "bg-[#2F6F4E]/5" },
+                  { icon: Settings, label: "Profile Settings", to: "/account/profile", color: "text-[#2F6F4E]", bg: "bg-[#2F6F4E]/5" },
+                  { icon: Package, label: "Order History", to: "/orders", color: "text-[#2F6F4E]", bg: "bg-[#2F6F4E]/5" },
+                  { icon: CreditCard, label: "Payment Methods", to: "/account/payments", color: "text-[#2F6F4E]", bg: "bg-[#2F6F4E]/5" },
+                  { icon: MapPin, label: "Saved Addresses", to: "/account/addresses", color: "text-[#2F6F4E]", bg: "bg-[#2F6F4E]/5" },
+                  { icon: Bell, label: "Notifications", to: "/account/notifications", color: "text-[#2F6F4E]", bg: "bg-[#2F6F4E]/5" },
                 ].map((item, idx) => (
-                  <button key={idx} className="w-full flex items-center justify-between p-5 rounded-3xl hover:bg-white/50 transition-all group text-left">
+                  <Link key={idx} to={item.to} className="w-full flex items-center justify-between p-5 rounded-3xl hover:bg-white/50 transition-all group text-left">
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-xl ${item.bg} ${item.color} flex items-center justify-center`}>
                         <item.icon size={20} />
@@ -172,7 +185,7 @@ const Account = () => {
                       <span className="font-black text-[#1E3D2B]">{item.label}</span>
                     </div>
                     <ChevronRight size={18} className="text-[#6B4F3F] group-hover:translate-x-1 transition-transform" />
-                  </button>
+                  </Link>
                 ))}
               </div>
             </div>

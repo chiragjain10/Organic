@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
 import { db } from "./Firebase";
 import { collection, getDocs, doc, deleteDoc, addDoc } from "firebase/firestore";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Heart, Trash2, ShoppingCart, ArrowLeft, Star } from "lucide-react";
+import SEO from "./SEO";
 
 const Wishlist = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -88,6 +88,18 @@ const Wishlist = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] pt-32 pb-20 px-6">
+      <SEO
+        title="Wishlist | Leaf Burst"
+        description="View and manage your saved Leaf Burst products."
+        canonical={typeof window !== 'undefined' ? `${window.location.origin}/wishlist` : undefined}
+        noindex={true}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "name": "Wishlist",
+          "url": typeof window !== 'undefined' ? `${window.location.origin}/wishlist` : "https://example.com/wishlist"
+        }}
+      />
       <div className="max-w-[1300px] mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">

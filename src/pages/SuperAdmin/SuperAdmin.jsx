@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { ProductForm } from "../Admin/Admin";
 import { db } from "../../components/Firebase";
+import SEO from "../../components/SEO";
 import {
   collection,
   getDocs,
@@ -372,6 +373,12 @@ const SuperAdmin = () => {
 
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-900">
+      <SEO
+        title="Super Admin | Leaf Burst"
+        description="Super Admin control center. Not intended for indexing."
+        canonical={typeof window !== 'undefined' ? `${window.location.origin}/super` : undefined}
+        noindex={true}
+      />
       {/* Sidebar */}
       <aside className="w-64 border-r border-slate-100 bg-white/80 backdrop-blur-sm flex flex-col">
         <div className="px-6 py-5 border-b border-slate-100">

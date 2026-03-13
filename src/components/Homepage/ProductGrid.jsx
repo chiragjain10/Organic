@@ -3,6 +3,7 @@ import { Plus, Heart, Eye, Loader2, Star, Sparkles } from 'lucide-react';
 import { db } from '../../components/Firebase';
 import { getDocs, collection, query, orderBy, doc, setDoc } from 'firebase/firestore';
 import { useAuth } from '../../components/useAuth';
+import { useShopData } from '../../components/ShopDataProvider';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from "react-router-dom";
@@ -18,6 +19,7 @@ const CATEGORIES = [
 const ProductCard = ({ product, showToast, setSelectedProduct }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const shop = useShopData();
   const [loadingType, setLoadingType] = useState(null);
 
   const addToCollection = async (e, collectionName) => {
@@ -47,6 +49,34 @@ const ProductCard = ({ product, showToast, setSelectedProduct }) => {
     } catch (e) { console.error(e); } finally { setLoadingType(null); }
   };
 
+  const toggleCart = async (e) => {
+    e.stopPropagation();
+    if (!user) { navigate('/login'); return; }
+    const inCart = shop?.isInCart(product.id);
+    const ref = doc(db, "users", user.uid, "cart", product.id);
+    if (inCart) {
+      const { deleteDoc } = await import("firebase/firestore");
+      await deleteDoc(ref);
+      if (showToast) showToast("Removed from cart");
+    } else {
+      await addToCollection(e, "cart");
+    }
+  };
+
+  const toggleWishlist = async (e) => {
+    e.stopPropagation();
+    if (!user) { navigate('/login'); return; }
+    const inWish = shop?.isInWishlist(product.id);
+    const ref = doc(db, "users", user.uid, "wishlist", product.id);
+    if (inWish) {
+      const { deleteDoc } = await import("firebase/firestore");
+      await deleteDoc(ref);
+      if (showToast) showToast("Removed from wishlist");
+    } else {
+      await addToCollection(e, "wishlist");
+    }
+  };
+
   return (
     <motion.div 
       layout
@@ -72,10 +102,10 @@ const ProductCard = ({ product, showToast, setSelectedProduct }) => {
              <Eye size={15} strokeWidth={1.5} />
            </button>
            <button 
-             onClick={(e) => addToCollection(e, 'wishlist')}
+             onClick={toggleWishlist}
              className="w-10 h-10 rounded-full bg-white text-[#1E3D2B] flex items-center justify-center hover:bg-[#6E8B3D] hover:text-white transition-all shadow-sm"
            >
-             <Heart size={15} strokeWidth={1.5} fill={loadingType === 'wishlist' ? "currentColor" : "none"} />
+             <Heart size={15} strokeWidth={1.5} fill={shop?.isInWishlist(product.id) ? "currentColor" : "none"} />
            </button>
         </div>
 
@@ -125,14 +155,14 @@ const ProductCard = ({ product, showToast, setSelectedProduct }) => {
           
           <button 
             disabled={loadingType === 'cart'}
-            onClick={(e) => addToCollection(e, 'cart')}
+            onClick={toggleCart}
             className="relative flex items-center justify-center w-14 h-14 bg-[#1E3D2B] text-white rounded-2xl hover:bg-[#6E8B3D] transition-all duration-500 group/btn"
           >
             {loadingType === 'cart' ? (
               <Loader2 size={20} className="animate-spin" />
             ) : (
               <div className="relative">
-                <Plus size={24} className="group-hover/btn:rotate-180 transition-transform duration-500" />
+                {shop?.isInCart(product.id) ? <span className="text-[10px] font-black">–</span> : <Plus size={24} className="group-hover/btn:rotate-180 transition-transform duration-500" />}
               </div>
             )}
           </button>

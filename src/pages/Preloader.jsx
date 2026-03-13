@@ -6,7 +6,7 @@ const OrganicPreloader = ({ onComplete }) => {
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
-    const contentTimer = setTimeout(() => setShowContent(true), 400);
+    setTimeout(() => setShowContent(true), 400);
 
     const timer = setInterval(() => {
       setProgress((prev) => {
@@ -102,7 +102,7 @@ const OrganicPreloader = ({ onComplete }) => {
       {/* Textured Overlay (Grain) */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')]" />
 
-      <style jsx>{`
+      <style>{`
         @font-face {
           font-family: 'serif';
           src: url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,700&display=swap');

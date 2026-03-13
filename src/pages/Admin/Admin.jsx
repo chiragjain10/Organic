@@ -14,6 +14,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { useForm } from "react-hook-form";
+import SEO from "../../components/SEO";
 
 const uploadToCloudinary = async (file) => {
   const data = new FormData();
@@ -447,6 +448,12 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-900">
+      <SEO
+        title="Admin | Leaf Burst"
+        description="Administrative workspace. Not intended for indexing."
+        canonical={typeof window !== 'undefined' ? `${window.location.origin}/admin` : undefined}
+        noindex={true}
+      />
       {/* Sidebar */}
       <aside className="w-64 border-r border-slate-100 bg-white/80 backdrop-blur-sm flex flex-col">
         <div className="px-6 py-5 border-b border-slate-100">

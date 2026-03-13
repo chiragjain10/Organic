@@ -12,10 +12,22 @@ import {
   ShieldOff, 
   Microscope 
 } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const About = () => {
   return (
     <div className="min-h-screen bg-[#F7F6F2] pt-32 pb-24 px-6">
+      <SEO
+        title="About | Leaf Burst"
+        description="Leaf Burst crafts Ayurvedic-inspired, lab-tested wellness formulations. Learn our mission and standards."
+        canonical={typeof window !== 'undefined' ? `${window.location.origin}/about` : undefined}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "AboutPage",
+          "name": "About Leaf Burst",
+          "url": typeof window !== 'undefined' ? `${window.location.origin}/about` : "https://example.com/about"
+        }}
+      />
       <div className="max-w-[1300px] mx-auto space-y-12">
         
         {/* --- 01. HERO SECTION --- */}

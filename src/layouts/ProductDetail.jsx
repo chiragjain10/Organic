@@ -3,12 +3,15 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { db } from "../components/Firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useAuth } from "../components/useAuth";
+import { useShopData } from "../components/ShopDataProvider";
 import { Star, ShieldCheck, BadgeCheck, Heart, ShoppingBag, ArrowLeft, Share2, Info, Leaf, FlaskConical, Wheat } from 'lucide-react';
+import SEO from "../components/SEO";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const shop = useShopData();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('description');
@@ -36,17 +39,89 @@ const ProductDetail = () => {
 
     try {
       const itemRef = doc(db, "users", user.uid, collectionName, product.id);
-      await setDoc(itemRef, {
-        name: product.name,
-        price: product.price,
+      const payload = {
+        id: product.id,
+        name: (product.title || product.name || "").toString(),
+        price: typeof product.price === "number" ? product.price : Number(product.price || 0),
         image: product.image || product.images?.[0] || "",
         addedAt: new Date().toISOString(),
-        quantity: quantity
-      });
+        quantity: Number.isFinite(Number(quantity)) ? Number(quantity) : 1,
+      };
+      await setDoc(itemRef, payload);
       alert(`Added to ${collectionName}!`);
     } catch (error) {
       console.error(`Error adding to ${collectionName}:`, error);
     }
+  };
+
+  const toggleCart = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    if (!product) return;
+    const inCart = shop?.isInCart(product.id);
+    const ref = doc(db, "users", user.uid, "cart", product.id);
+    if (inCart) {
+      const { deleteDoc } = await import("firebase/firestore");
+      await deleteDoc(ref);
+      alert("Removed from cart");
+    } else {
+      await addToCollection("cart");
+    }
+  };
+
+  const toggleWishlist = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    if (!product) return;
+    const inWish = shop?.isInWishlist(product.id);
+    const ref = doc(db, "users", user.uid, "wishlist", product.id);
+    if (inWish) {
+      const { deleteDoc } = await import("firebase/firestore");
+      await deleteDoc(ref);
+      alert("Removed from wishlist");
+    } else {
+      await addToCollection("wishlist");
+    }
+  };
+
+  const loadScript = (src) =>
+    new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
+  const buyNow = async () => {
+    if (!product) return;
+    const ok = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
+    if (!ok) return;
+    const key = import.meta.env.VITE_RAZORPAY_KEY_ID;
+    if (!key) {
+      alert("Razorpay key missing");
+      return;
+    }
+    const amount = Number(product.price || 0) * Number(quantity || 1);
+    const options = {
+      key,
+      amount: Math.round(amount * 100),
+      currency: "INR",
+      name: "Leaf Burst",
+      description: "Buy Now",
+      handler: function () {
+        alert("Payment successful");
+        navigate("/account");
+      },
+      prefill: {},
+      theme: { color: "#1E3D2B" },
+    };
+    const rzp = new window.Razorpay(options);
+    rzp.open();
   };
 
   if (loading) {
@@ -90,6 +165,31 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] pt-32 pb-20">
+      {product && (
+        <SEO
+          title={`${product.title || product.name} | Leaf Burst`}
+          description={`${product.title || product.name} – Organic ${product.category || "Product"} by Leaf Burst. Explore clean, lab-tested wellness.`}
+          canonical={typeof window !== 'undefined' ? window.location.href : undefined}
+          image={mainImage}
+          jsonLd={{
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": product.title || product.name,
+            "image": images,
+            "brand": {
+              "@type": "Brand",
+              "name": "Leaf Burst"
+            },
+            "offers": product.price ? {
+              "@type": "Offer",
+              "priceCurrency": "INR",
+              "price": String(product.price),
+              "availability": "https://schema.org/InStock",
+              "url": typeof window !== 'undefined' ? window.location.href : "https://example.com/product"
+            } : undefined
+          }}
+        />
+      )}
       <div className="max-w-[1300px] mx-auto px-6 md:px-12">
         {/* Breadcrumbs & Navigation */}
         <div className="flex items-center justify-between mb-12">
@@ -225,17 +325,22 @@ const ProductDetail = () => {
 
               <div className="flex gap-4 pt-4">
                 <button
-                  onClick={() => addToCollection("cart")}
+                  onClick={toggleCart}
                   className="flex-1 h-16 rounded-[24px] bg-[#6E8B3D] text-white font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-[#6E8B3D]/20 hover:bg-[#1E3D2B] transition-all transform active:scale-95 flex items-center justify-center gap-3"
                 >
                   <ShoppingBag size={18} />
-                  Add to Shopping Bag
+                  {shop?.isInCart(product.id) ? "Remove from Cart" : "Add to Shopping Bag"}
                 </button>
                 <button
-                  onClick={() => addToCollection("wishlist")}
+                  onClick={toggleWishlist}
                   className="w-16 h-16 rounded-[24px] bg-[#F7F6F2] border-2 border-[#6E8B3D]/20 flex items-center justify-center text-[#1E3D2B] hover:text-[#2F6F4E] hover:border-[#2F6F4E]/20 transition-all"
                 >
                   <Heart size={20} />
+                </button>
+              </div>
+              <div className="flex gap-4 pt-2">
+                <button onClick={buyNow} className="flex-1 h-12 rounded-[24px] bg-[#1E3D2B] text-white font-black text-xs uppercase tracking-[0.2em] hover:bg-[#6E8B3D] transition-all">
+                  Buy Now
                 </button>
               </div>
             </div>
@@ -310,5 +415,3 @@ const ProductDetail = () => {
 };
 
 export default ProductDetail;
-
-

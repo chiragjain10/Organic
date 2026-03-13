@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, User, Heart, X, Menu, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useShopData } from './ShopDataProvider';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const shop = useShopData();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -61,12 +63,15 @@ const Header = () => {
             <div className="flex items-center gap-2">
               <div className="hidden md:flex items-center gap-2">
                 <Link to="/account" className={iconClass}><User size={20} strokeWidth={1.5} /></Link>
-                <Link to="/wishlist" className={iconClass}><Heart size={20} strokeWidth={1.5} /></Link>
+                <Link to="/wishlist" className="relative p-2.5 group">
+                  <Heart size={20} strokeWidth={1.5} className={`transition-all ${isScrolled ? 'text-[#F7F6F2]' : 'text-[#1E3D2B]'}`} />
+                  <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#6E8B3D] text-[9px] font-bold text-white border border-white">{shop?.wishlistCount || 0}</span>
+                </Link>
               </div>
               
               <Link to="/cart" className="relative p-2.5 group">
                 <ShoppingBag size={20} strokeWidth={1.5} className={`transition-all ${isScrolled ? 'text-[#F7F6F2]' : 'text-[#1E3D2B]'}`} />
-                <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#6E8B3D] text-[9px] font-bold text-white border border-white">0</span>
+                <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#6E8B3D] text-[9px] font-bold text-white border border-white">{shop?.cartCount || 0}</span>
               </Link>
 
               <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={`p-2 lg:hidden ml-2 ${isScrolled ? 'text-[#F7F6F2]' : 'text-[#1E3D2B]'}`}>
