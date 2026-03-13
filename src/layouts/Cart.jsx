@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../components/useAuth";
 import { db } from "../components/Firebase";
-import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, doc, deleteDoc } from "firebase/firestore";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag, Trash2, ArrowLeft, ShieldCheck, Truck, RotateCcw } from "lucide-react";
 import SEO from "../components/SEO";
@@ -13,22 +13,29 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const snap = await getDocs(collection(db, "users", user.uid, "cart"));
-        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    if (!user) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, "users", user.uid, "cart"),
+      (snap) => {
+        const list = snap.docs.map((d) => ({
+          ...d.data(),
+          id: d.id,
+        }));
         setItems(list);
-      } catch (error) {
+        setLoading(false);
+      },
+      (error) => {
         console.error("Error loading cart:", error);
-      } finally {
         setLoading(false);
       }
-    };
-    load();
+    );
+
+    return () => unsubscribe();
   }, [user]);
 
   const removeItem = async (id) => {
