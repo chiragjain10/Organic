@@ -90,7 +90,7 @@ const Hero = () => {
           <div className="lg:col-span-5 relative mt-12 lg:mt-0">
             <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden shadow-[0_40px_80px_-15px_rgba(30,61,43,0.15)] group">
               <img
-                src="img/a1.jpeg"
+                src="img/hero .jpeg"
                 alt="Organic Superfood"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />

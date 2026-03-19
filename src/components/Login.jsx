@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./useAuth";
+import { db } from "./Firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { Mail, Lock, ArrowRight, Sparkles, AlertCircle } from "lucide-react";
 
 const Login = () => {
@@ -16,8 +18,17 @@ const Login = () => {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
-      navigate("/");
+      const credential = await login(email, password);
+      const userDoc = doc(db, "users", credential.user.uid);
+      const snap = await getDoc(userDoc);
+      const role = snap.data()?.role || "user";
+      if (role === "superadmin") {
+        navigate("/super");
+      } else if (role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch {
       setError("The credentials provided do not match our records.");
     } finally {
