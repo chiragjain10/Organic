@@ -30,44 +30,18 @@ const ProductDetail = () => {
     load();
   }, [id]);
 
-  const addToCollection = async (collectionName) => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-    if (!product) return;
-
-    try {
-      const itemRef = doc(db, "users", user.uid, collectionName, product.id);
-      const payload = {
-        id: product.id,
-        name: (product.title || product.name || "").toString(),
-        price: typeof product.price === "number" ? product.price : Number(product.price || 0),
-        image: product.image || product.images?.[0] || "",
-        addedAt: new Date().toISOString(),
-        quantity: Number.isFinite(Number(quantity)) ? Number(quantity) : 1,
-      };
-      await setDoc(itemRef, payload);
-      alert(`Added to ${collectionName}!`);
-    } catch (error) {
-      console.error(`Error adding to ${collectionName}:`, error);
-    }
-  };
-
   const toggleCart = async () => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
     if (!product) return;
-    const inCart = shop?.isInCart(product.id);
-    const ref = doc(db, "users", user.uid, "cart", product.id);
-    if (inCart) {
-      const { deleteDoc } = await import("firebase/firestore");
-      await deleteDoc(ref);
-      alert("Removed from cart");
-    } else {
-      await addToCollection("cart");
+    try {
+      if (shop?.isInCart(product.id)) {
+        await shop.removeFromCart(product.id);
+        alert("Removed from cart");
+      } else {
+        await shop.addToCart({ ...product, quantity });
+        alert("Added to cart!");
+      }
+    } catch (error) {
+      console.error("Cart action failed", error);
     }
   };
 
@@ -77,14 +51,16 @@ const ProductDetail = () => {
       return;
     }
     if (!product) return;
-    const inWish = shop?.isInWishlist(product.id);
-    const ref = doc(db, "users", user.uid, "wishlist", product.id);
-    if (inWish) {
-      const { deleteDoc } = await import("firebase/firestore");
-      await deleteDoc(ref);
-      alert("Removed from wishlist");
-    } else {
-      await addToCollection("wishlist");
+    try {
+      if (shop?.isInWishlist(product.id)) {
+        await shop.removeFromWishlist(product.id);
+        alert("Removed from wishlist");
+      } else {
+        await shop.addToWishlist(product);
+        alert("Added to wishlist");
+      }
+    } catch (error) {
+      console.error("Wishlist action failed", error);
     }
   };
 

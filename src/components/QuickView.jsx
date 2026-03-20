@@ -1,15 +1,47 @@
 import React, { useState } from "react";
 import { X, ShoppingBag, Heart } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
+import { useShopData } from "./ShopDataProvider";
+import { useAuth } from "./useAuth";
 
 const QuickView = ({ product, onClose }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const navigate = useNavigate();
+  const shop = useShopData();
+  const { user } = useAuth();
 
   const handleClose = () => {
     setIsOpen(false);
     setTimeout(() => onClose?.(), 300);
+  };
+
+  const handleAddToCart = async () => {
+    try {
+      await shop.addToCart({ ...product, quantity });
+      alert("Added to cart!");
+      handleClose();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleWishlist = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    try {
+      if (shop.isInWishlist(product.id)) {
+        await shop.removeFromWishlist(product.id);
+        alert("Removed from wishlist");
+      } else {
+        await shop.addToWishlist(product);
+        alert("Added to wishlist");
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   if (!isOpen || !product) {
@@ -18,7 +50,6 @@ const QuickView = ({ product, onClose }) => {
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className={`fixed inset-0 z-[999] transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -27,14 +58,12 @@ const QuickView = ({ product, onClose }) => {
         onClick={handleClose}
       />
 
-      {/* Modal */}
       <div className={`fixed inset-0 z-[10000] flex items-center justify-center p-4 pointer-events-none mt-10`}>
         <div
           className={`bg-[#F7F6F2] rounded-3xl shadow-2xl max-w-4xl w-full overflow-hidden pointer-events-auto transform transition-all duration-300 ${
             isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0"
           }`}
         >
-          {/* Header */}
           <div className="flex justify-between items-center px-8 py-6 border-b border-[#C5A880]/20 bg-gradient-to-r from-[#C5A880]/5 to-[#1E3D2B]/5">
             <h2 className="text-lg font-serif text-[#1E3D2B] uppercase tracking-tight">
               Quick View
@@ -48,9 +77,7 @@ const QuickView = ({ product, onClose }) => {
             </button>
           </div>
 
-          {/* Content */}
           <div className="grid md:grid-cols-2 gap-8 p-8">
-            {/* Image Section */}
             <div className="flex items-center justify-center">
               <div className="bg-gradient-to-br from-[#F7F6F2] to-[#C5A880]/20 rounded-3xl flex items-center justify-center w-full aspect-square relative overflow-hidden group">
                 <img
@@ -66,15 +93,12 @@ const QuickView = ({ product, onClose }) => {
               </div>
             </div>
 
-            {/* Details Section */}
             <div className="flex flex-col justify-between space-y-6">
               <div className="space-y-4">
-                {/* Title */}
                 <h3 className="text-3xl font-serif text-[#1E3D2B] leading-tight">
                   {product.title || product.name}
                 </h3>
 
-                {/* Rating & Price */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="flex gap-1">
@@ -97,14 +121,12 @@ const QuickView = ({ product, onClose }) => {
                   </div>
                 </div>
 
-                {/* Description */}
                 {product.description && (
                   <p className="text-sm text-[#1E3D2B]/70 leading-relaxed font-sans">
                     {product.description}
                   </p>
                 )}
 
-                {/* Weight / Details */}
                 {(product.weight || product.suitable_for) && (
                   <div className="bg-[#F7F6F2] rounded-xl p-4 border border-[#C5A880]/30">
                     <p className="text-xs font-black text-[#1E3D2B]/40 uppercase tracking-wider mb-1">
@@ -117,9 +139,7 @@ const QuickView = ({ product, onClose }) => {
                 )}
               </div>
 
-              {/* Actions */}
               <div className="space-y-4">
-                {/* Quantity Selector */}
                 <div className="flex items-center gap-4">
                   <span className="text-xs font-black text-[#1E3D2B]/60 uppercase tracking-wider">Quantity</span>
                   <div className="flex items-center border border-[#C5A880]/30 rounded-xl overflow-hidden">
@@ -141,7 +161,6 @@ const QuickView = ({ product, onClose }) => {
                   </div>
                 </div>
 
-                {/* Buttons */}
                 <div className="flex gap-4">
                   <button
                     onClick={() => navigate(`/product/${product.id}`)}
@@ -150,16 +169,18 @@ const QuickView = ({ product, onClose }) => {
                     View Full Details
                   </button>
                   <button
-                    className="px-6 py-4 rounded-2xl bg-[#F7F6F2] border border-[#C5A880] text-[#C5A880] font-black hover:bg-[#C5A880]/10 transition-colors"
+                    onClick={handleWishlist}
+                    className={`px-6 py-4 rounded-2xl bg-[#F7F6F2] border border-[#C5A880] font-black transition-colors ${shop.isInWishlist(product.id) ? 'bg-[#C5A880] text-white' : 'text-[#C5A880] hover:bg-[#C5A880]/10'}`}
                   >
-                    <Heart size={20} />
+                    <Heart size={20} fill={shop.isInWishlist(product.id) ? "currentColor" : "none"} />
                   </button>
                 </div>
 
-                {/* Add to Cart */}
-                <button className="w-full px-6 py-4 rounded-2xl bg-[#C5A880] text-[#1E3D2B] font-black uppercase tracking-wider hover:bg-[#B59553] transition-all transform active:scale-95 shadow-lg shadow-[#C5A880]/20 flex items-center justify-center gap-2">
+                <button 
+                  onClick={handleAddToCart}
+                  className="w-full px-6 py-4 rounded-2xl bg-[#C5A880] text-[#1E3D2B] font-black uppercase tracking-wider hover:bg-[#B59553] transition-all transform active:scale-95 shadow-lg shadow-[#C5A880]/20 flex items-center justify-center gap-2">
                   <ShoppingBag size={20} />
-                  Add to Cart
+                  {shop.isInCart(product.id) ? "Remove from Cart" : "Add to Cart"}
                 </button>
               </div>
             </div>

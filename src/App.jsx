@@ -26,6 +26,10 @@ import Addresses from "./pages/Addresses";
 import PaymentMethods from "./pages/PaymentMethods";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import ReturnPolicy from "./pages/ReturnPolicy";
+import AdminLogin from "./pages/Admin/AdminLogin";
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -39,6 +43,7 @@ const AppRoutes = () => {
       {!hideChrome && <Header />}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/super" element={<SuperAdmin />} />
         <Route path="/login" element={<Login />} />
@@ -57,6 +62,9 @@ const AppRoutes = () => {
         <Route path="/account/notifications" element={<Notifications />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/product/:id/quickview" element={<QuickView />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/return-policy" element={<ReturnPolicy />} />
       </Routes>
       {!hideChrome && <Footer />}
     </>

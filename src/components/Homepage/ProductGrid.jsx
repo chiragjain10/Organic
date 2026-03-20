@@ -22,58 +22,42 @@ const ProductCard = ({ product, showToast, setSelectedProduct }) => {
   const shop = useShopData();
   const [loadingType, setLoadingType] = useState(null);
 
-  const addToCollection = async (e, collectionName) => {
-    e.stopPropagation();
-    if (!user) { navigate('/login'); return; }
-    setLoadingType(collectionName);
-    try {
-      const itemRef = doc(db, "users", user.uid, collectionName, product.id);
-      await setDoc(itemRef, {
-        title: product.title || product.name,
-        name: product.title || product.name,
-        brand: product.brand || "",
-        category: product.category || "",
-        price: product.price,
-        mrp: product.mrp || product.original_price || 0,
-        image: product.image || product.images?.[0] || "",
-        images: product.image
-          ? [
-              product.image,
-              ...(product.images?.filter((i) => i !== product.image) || []),
-            ]
-          : product.images || [],
-        weight: product.weight || product.net_quantity || "",
-        addedAt: new Date().toISOString()
-      });
-      if(showToast) showToast(`Added to ${collectionName}`);
-    } catch (e) { console.error(e); } finally { setLoadingType(null); }
-  };
-
   const toggleCart = async (e) => {
     e.stopPropagation();
-    if (!user) { navigate('/login'); return; }
-    const inCart = shop?.isInCart(product.id);
-    const ref = doc(db, "users", user.uid, "cart", product.id);
-    if (inCart) {
-      const { deleteDoc } = await import("firebase/firestore");
-      await deleteDoc(ref);
-      if (showToast) showToast("Removed from cart");
-    } else {
-      await addToCollection(e, "cart");
+    setLoadingType('cart');
+    try {
+      const inCart = shop?.isInCart(product.id);
+      if (inCart) {
+        await shop.removeFromCart(product.id);
+        if (showToast) showToast("Removed from cart");
+      } else {
+        await shop.addToCart(product);
+        if (showToast) showToast("Added to cart");
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingType(null);
     }
   };
 
   const toggleWishlist = async (e) => {
     e.stopPropagation();
     if (!user) { navigate('/login'); return; }
-    const inWish = shop?.isInWishlist(product.id);
-    const ref = doc(db, "users", user.uid, "wishlist", product.id);
-    if (inWish) {
-      const { deleteDoc } = await import("firebase/firestore");
-      await deleteDoc(ref);
-      if (showToast) showToast("Removed from wishlist");
-    } else {
-      await addToCollection(e, "wishlist");
+    setLoadingType('wishlist');
+    try {
+      const inWish = shop?.isInWishlist(product.id);
+      if (inWish) {
+        await shop.removeFromWishlist(product.id);
+        if (showToast) showToast("Removed from wishlist");
+      } else {
+        await shop.addToWishlist(product);
+        if (showToast) showToast("Added to wishlist");
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingType(null);
     }
   };
 

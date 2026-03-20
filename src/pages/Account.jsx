@@ -3,16 +3,16 @@ import { useAuth } from "../components/useAuth";
 import { db } from "../components/Firebase";
 import { doc, getDoc, collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
-import { 
-  User, 
-  Package, 
-  Heart, 
-  LogOut, 
-  ChevronRight, 
-  Settings, 
-  ShoppingBag, 
-  CreditCard, 
-  MapPin, 
+import {
+  User,
+  Package,
+  Heart,
+  LogOut,
+  ChevronRight,
+  Settings,
+  ShoppingBag,
+  CreditCard,
+  MapPin,
   Bell,
   Award
 } from "lucide-react";
@@ -44,12 +44,12 @@ const Account = () => {
         // Fetch Cart Count
         const cartSnap = await getDocs(collection(db, "users", user.uid, "cart"));
         const wishlistSnap = await getDocs(collection(db, "users", user.uid, "wishlist"));
-        
+
         // Fetch Recent Orders
         const ordersRef = collection(db, "users", user.uid, "orders");
         const ordersQuery = query(ordersRef, orderBy("createdAt", "desc"), limit(3));
         const ordersSnap = await getDocs(ordersQuery);
-        
+
         setRecentOrders(ordersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
         setStats({
           cart: cartSnap.size,
@@ -97,11 +97,11 @@ const Account = () => {
         }}
       />
       <div className="max-w-[1300px] mx-auto">
-        
+
         {/* Profile Header Card */}
         <div className="bg-[#1E3D2B] rounded-[48px] p-8 md:p-16 mb-12 relative overflow-hidden shadow-2xl shadow-[#1E3D2B]/20">
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#2F6F4E]/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3" />
-          
+
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
             <div className="flex flex-col md:flex-row items-center gap-8">
               <div className="relative group">
@@ -116,10 +116,10 @@ const Account = () => {
                   <Award size={18} />
                 </div>
               </div>
-              
+
               <div className="text-center md:text-left space-y-2">
                 <h1 className="h-serif text-4xl md:text-5xl font-black text-white tracking-tighter">
-                  {userData?.displayName || "LeafSkin Member"}
+                  {userData?.displayName || "LeafBurst Member"}
                 </h1>
                 <p className="text-white/80 font-medium text-lg">{user?.email}</p>
                 <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4">
@@ -144,7 +144,7 @@ const Account = () => {
         </div>
 
         <div className="grid lg:grid-cols-12 gap-12">
-          
+
           {/* Left Column: Stats & Menu */}
           <div className="lg:col-span-4 space-y-8">
             {/* Stats Grid */}
@@ -156,7 +156,7 @@ const Account = () => {
                 <p className="text-4xl font-black text-[#1E3D2B] tracking-tighter">{stats.cart}</p>
                 <p className="text-xs font-black text-[#6B4F3F] uppercase tracking-[0.2em] mt-2">In Cart</p>
               </Link>
-              
+
               <Link to="/wishlist" className="group bg-[#F7F6F2] p-8 rounded-[40px] border border-[#6E8B3D]/30 shadow-sm hover:shadow-[0_20px_50px_rgba(197,168,128,0.08)] transition-all">
                 <div className="w-14 h-14 rounded-2xl bg-[#2F6F4E]/10 flex items-center justify-center text-[#2F6F4E] mb-6 group-hover:scale-110 transition-transform">
                   <Heart size={28} fill="currentColor" />
@@ -167,7 +167,7 @@ const Account = () => {
             </div>
 
             {/* Navigation Menu */}
-              <div className="bg-[#F7F6F2] rounded-[48px] border border-[#6E8B3D]/30 shadow-sm overflow-hidden p-4">
+            <div className="bg-[#F7F6F2] rounded-[48px] border border-[#6E8B3D]/30 shadow-sm overflow-hidden p-4">
               <h3 className="px-6 py-4 text-xs font-black text-[#6B4F3F] uppercase tracking-[0.3em]">Account Management</h3>
               <div className="space-y-1">
                 {[

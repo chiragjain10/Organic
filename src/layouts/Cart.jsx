@@ -4,79 +4,22 @@ import { db } from "../components/Firebase";
 import { collection, onSnapshot, doc, deleteDoc } from "firebase/firestore";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag, Trash2, ArrowLeft, ShieldCheck, Truck, RotateCcw } from "lucide-react";
+import { useShopData } from "../components/ShopDataProvider";
 import SEO from "../components/SEO";
 
 const Cart = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) {
-      setItems([]);
-      setLoading(false);
-      return;
-    }
-
-    const unsubscribe = onSnapshot(
-      collection(db, "users", user.uid, "cart"),
-      (snap) => {
-        const list = snap.docs.map((d) => ({
-          ...d.data(),
-          id: d.id,
-        }));
-        setItems(list);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Error loading cart:", error);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user]);
+  const shop = useShopData();
+  const items = shop?.cartItems || [];
 
   const removeItem = async (id) => {
-    if (!user) return;
     try {
-      await deleteDoc(doc(db, "users", user.uid, "cart", id));
-      setItems((prev) => prev.filter((i) => i.id !== id));
+      await shop.removeFromCart(id);
     } catch (error) {
       console.error("Error removing item:", error);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F7F6F2] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#2F6F4E]"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#F7F6F2] flex items-center justify-center px-6">
-        <div className="bg-[#F7F6F2] p-12 rounded-[40px] border border-[#6E8B3D]/20 shadow-[0_20px_50px_rgba(197,168,128,0.08)] max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-[#F7F6F2] border border-[#6E8B3D]/20 rounded-3xl flex items-center justify-center mx-auto mb-8 text-[#1E3D2B]/20">
-            <ShoppingBag size={40} />
-          </div>
-          <h2 className="h-serif text-2xl font-black text-[#1E3D2B] mb-4 text-center">Your Organic Cart</h2>
-          <p className="text-[#6B4F3F] font-medium mb-8">
-            Sign in to view your superfood selection and proceed to checkout.
-          </p>
-          <Link 
-            to="/login" 
-            className="block w-full py-4 bg-[#6E8B3D] text-white rounded-2xl font-black hover:bg-[#1E3D2B] transition-all transform hover:-translate-y-1 shadow-lg shadow-[#6E8B3D]/20"
-          >
-            Sign In to Cart
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   const total = items.reduce((sum, i) => sum + (Number(i.price) || 0), 0);
 

@@ -14,10 +14,13 @@ function loadScript(src) {
   });
 }
 
+import { useShopData } from "../components/ShopDataProvider";
+
 export default function Checkout() {
   const { user } = useAuth();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const shop = useShopData();
+  const items = shop?.cartItems || [];
+  const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [address, setAddress] = useState({ firstName: "", lastName: "", line1: "", line2: "", zip: "", city: "", state: "" });
   const [shipping, setShipping] = useState("standard");
@@ -25,13 +28,10 @@ export default function Checkout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const load = async () => {
-      if (!user) { navigate("/login"); return; }
-      const snap = await getDocs(collection(db, "users", user.uid, "cart"));
-      setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      setLoading(false);
-    };
-    load();
+    if (!user) {
+      navigate("/login?redirect=checkout");
+      return;
+    }
   }, [user, navigate]);
 
   const subtotal = items.reduce((s, i) => s + Number(i.price || 0) * Number(i.quantity || 1), 0);
@@ -53,6 +53,9 @@ export default function Checkout() {
     };
     const ordersCol = collection(db, "users", user.uid, "orders");
     const ref = await addDoc(ordersCol, order);
+    try {
+      await setDoc(doc(db, "orders", ref.id), { ...order, customerName: `${address.firstName} ${address.lastName}` });
+    } catch {}
     try {
       await fetch("/api/send-email", {
         method: "POST",

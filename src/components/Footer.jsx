@@ -10,7 +10,7 @@ const Footer = () => {
   const navLinks = [
     { name: 'Shop', to: '/shop' },
     { name: 'Best Sellers 🔥', to: '/best-sellers' },
-    { name: 'Track Order', to: '/track-order' },
+    { name: 'Track Order', to: '/orders' },
     { name: 'Contact', to: '/contact' },
   ];
 
@@ -130,9 +130,10 @@ const Footer = () => {
             <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#1E3D2B]/40">
               © {currentYear} Leaf Burst Organics
             </span>
-            <div className="flex gap-6">
+            <div className="flex flex-wrap items-center gap-4 md:gap-6">
               <Link to="/privacy" className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1E3D2B]/30 hover:text-[#1E3D2B] transition-colors">Privacy</Link>
               <Link to="/terms" className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1E3D2B]/30 hover:text-[#1E3D2B] transition-colors">Terms</Link>
+              <Link to="/return-policy" className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1E3D2B]/30 hover:text-[#1E3D2B] transition-colors">Returns</Link>
             </div>
           </div>
 

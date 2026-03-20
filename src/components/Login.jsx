@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./useAuth";
 import { db } from "./Firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -8,10 +8,15 @@ import { Mail, Lock, ArrowRight, Sparkles, AlertCircle } from "lucide-react";
 const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Get redirect path from query string
+  const urlParams = new URLSearchParams(location.search);
+  const redirect = urlParams.get("redirect");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,6 +27,13 @@ const Login = () => {
       const userDoc = doc(db, "users", credential.user.uid);
       const snap = await getDoc(userDoc);
       const role = snap.data()?.role || "user";
+
+      // If there is a redirect parameter, go there (e.g. checkout)
+      if (redirect) {
+        navigate(`/${redirect}`);
+        return;
+      }
+
       if (role === "superadmin") {
         navigate("/super");
       } else if (role === "admin") {

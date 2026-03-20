@@ -11,6 +11,8 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../components/useAuth";
 
 const sidebarItems = [
   "Dashboard",
@@ -52,10 +54,25 @@ const statusBadgeClasses = (status) => {
 };
 
 const SuperAdmin = () => {
+  const { user, role, loading } = useAuth();
+  const location = useLocation();
+
   const [activeItem, setActiveItem] = useState("Dashboard");
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
+  const [orders, setOrders] = useState([]);
+
+  const loadOrders = async () => {
+    try {
+      const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setOrders(list);
+    } catch {
+      console.log("No orders found");
+    }
+  };
 
   const loadProducts = async () => {
     const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
@@ -79,6 +96,7 @@ const SuperAdmin = () => {
     const t = setTimeout(() => {
       loadProducts();
       loadUsers();
+      loadOrders();
     }, 0);
     return () => clearTimeout(t);
   }, []);
@@ -107,29 +125,38 @@ const SuperAdmin = () => {
     </header>
   );
 
-  const renderMetricCards = () => (
-    <section className="grid gap-5 md:grid-cols-3 mb-10">
-      {metricCards.map((card) => (
-        <article
-          key={card.label}
-          className="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-150"
-        >
-          <div className="p-5">
-            <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">
-              {card.label}
-            </p>
-            <p className="mt-3 text-2xl font-semibold text-slate-900">
-              {card.value}
-            </p>
-            <p className="mt-2 text-xs font-medium text-slate-500">
-              {card.trend}
-            </p>
-          </div>
-          <div className="h-1.5 w-full rounded-b-xl bg-gradient-to-r from-[#2F6F4E] via-[#6E8B3D] to-[#C5A880]" />
-        </article>
-      ))}
-    </section>
-  );
+  const renderMetricCards = () => {
+    const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const dynamicCards = [
+      { label: "Total Users", value: users.length, trend: "Registered accounts" },
+      { label: "Total Orders", value: orders.length, trend: "All time" },
+      { label: "Revenue", value: `₹${totalRevenue}`, trend: "Total sales" },
+      { label: "Products", value: products.length, trend: "Live catalog" },
+    ];
+    return (
+      <section className="grid gap-5 md:grid-cols-4 mb-10">
+        {dynamicCards.map((card) => (
+          <article
+            key={card.label}
+            className="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-150"
+          >
+            <div className="p-5">
+              <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">
+                {card.label}
+              </p>
+              <p className="mt-3 text-2xl font-semibold text-slate-900">
+                {card.value}
+              </p>
+              <p className="mt-2 text-xs font-medium text-slate-500">
+                {card.trend}
+              </p>
+            </div>
+            <div className="h-1.5 w-full rounded-b-xl bg-gradient-to-r from-[#2F6F4E] via-[#6E8B3D] to-[#C5A880]" />
+          </article>
+        ))}
+      </section>
+    );
+  };
 
   const renderProductsTable = () => (
     <section className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
@@ -228,7 +255,7 @@ const SuperAdmin = () => {
           </p>
         </div>
         <span className="px-3 py-1 rounded-full bg-slate-50 text-xs font-medium text-slate-600">
-          Updated just now
+          {orders.length} orders
         </span>
       </div>
       <div className="overflow-x-auto">
@@ -242,24 +269,31 @@ const SuperAdmin = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {orderRows.map((row) => (
+            {orders.slice(0, 10).map((row) => (
               <tr key={row.id} className="hover:bg-slate-50/60">
                 <td className="px-5 py-3 font-medium text-slate-900">
-                  {row.id}
+                  #{row.id.slice(-6).toUpperCase()}
                 </td>
-                <td className="px-5 py-3 text-slate-600">{row.customer}</td>
-                <td className="px-5 py-3 text-slate-900">{row.total}</td>
+                <td className="px-5 py-3 text-slate-600">{row.customerName || "-"}</td>
+                <td className="px-5 py-3 text-slate-900">₹{row.total}</td>
                 <td className="px-5 py-3">
                   <span
                     className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-medium ${statusBadgeClasses(
                       row.status
                     )}`}
                   >
-                    {row.status}
+                    {row.status?.replace('_', ' ')}
                   </span>
                 </td>
               </tr>
             ))}
+            {orders.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-5 py-6 text-center text-xs text-slate-500">
+                  No orders yet.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -285,6 +319,7 @@ const SuperAdmin = () => {
             <tr className="text-xs font-medium text-slate-500 uppercase tracking-wide">
               <th className="px-5 py-3">Name</th>
               <th className="px-5 py-3">Email</th>
+              <th className="px-5 py-3">Role</th>
               <th className="px-5 py-3">Phone</th>
               <th className="px-5 py-3">Address</th>
               <th className="px-5 py-3">Joined</th>
@@ -294,11 +329,18 @@ const SuperAdmin = () => {
           <tbody className="divide-y divide-slate-100">
             {users.map((user) => (
               <tr key={user.id} className="hover:bg-slate-50/60">
-                <td className="px-5 py-3 text-slate-900 font-medium">
-                  {user.displayName || user.name || "-"}
+                <td className="px-5 py-3 text-slate-900 font-medium capitalize">
+                  {user.displayName || user.name || user.email?.split('@')[0] || "Unknown"}
                 </td>
                 <td className="px-5 py-3 text-slate-600">
                   {user.email || "-"}
+                </td>
+                <td className="px-5 py-3 text-slate-600">
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-medium ${
+                    user.role === 'admin' || user.role === 'superadmin' ? 'bg-[#1E3D2B]/10 text-[#1E3D2B] border-[#1E3D2B]/20' : 'bg-slate-100 text-slate-600 border-slate-200'
+                  }`}>
+                    {user.role || 'user'}
+                  </span>
                 </td>
                 <td className="px-5 py-3 text-slate-600">
                   {user.phone || "-"}
@@ -322,7 +364,7 @@ const SuperAdmin = () => {
             {users.length === 0 && (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="px-5 py-6 text-center text-xs text-slate-500"
                 >
                   No users found.
@@ -370,6 +412,12 @@ const SuperAdmin = () => {
         );
     }
   };
+
+  if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Authorizing Session...</div>;
+
+  if (!user || role !== 'superadmin') {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
 
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-900">
