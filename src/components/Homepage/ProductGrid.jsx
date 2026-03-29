@@ -10,10 +10,11 @@ import { Link } from "react-router-dom";
 
 // Mapping to keep UI names separate from Database Category IDs
 const CATEGORIES = [
-  { id: 'All', label: 'All Products' },
-  { id: 'Powders', label: 'Plant Powders' },
-  { id: 'Superfoods', label: 'Daily Nutrition' },
-  { id: 'Blends', label: 'Dry Leaves' }
+  { id: 'All', label: 'All' },
+  { id: 'Powders', label: 'Powders' },
+  { id: 'Superfoods', label: 'Superfoods' },
+  { id: 'Blends', label: 'Blends' },
+  { id: 'Kits', label: 'Kits' }
 ];
 
 const ProductCard = ({ product, showToast, setSelectedProduct }) => {
@@ -191,14 +192,14 @@ const ProductGrid = () => {
           </div>
 
           <div className="flex flex-col items-start md:items-end gap-6">
-            <div className="flex p-1.5 bg-white rounded-2xl border border-[#1E3D2B]/5 shadow-sm overflow-x-auto max-w-full">
+            <div className="flex bg-white rounded-full border border-[#1E3D2B]/5 p-2 items-center shadow-sm overflow-x-auto max-w-full scrollbar-hide">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 whitespace-nowrap ${
+                  className={`px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-500 whitespace-nowrap ${
                     activeCategory === cat.id 
-                    ? 'bg-[#1E3D2B] text-white shadow-xl' 
+                    ? 'bg-[#1E3D2B] text-white shadow-lg shadow-[#1E3D2B]/20' 
                     : 'bg-transparent text-[#1E3D2B]/40 hover:text-[#1E3D2B]'
                   }`}
                 >
