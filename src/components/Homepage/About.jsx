@@ -54,7 +54,7 @@ const BrandTrust = () => {
   ];
 
   return (
-    <section className="relative py-32 bg-[#F7F6F2] overflow-hidden">
+    <section className="relative py-16 md:py-32 bg-[#F7F6F2] overflow-hidden">
       {/* Decorative Grainy Texture Overlay */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
       

@@ -174,11 +174,11 @@ const ProductGrid = () => {
     : products.filter(p => p.category === activeCategory);
 
   return (
-    <section className="py-32 bg-[#F7F6F2] px-6 min-h-screen">
+    <section className="py-16 md:py-32 bg-[#F7F6F2] px-6 min-h-screen">
       <div className="max-w-[1300px] mx-auto">
         
         {/* Header Pod */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-10 border-b border-[#1E3D2B]/5 pb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 md:mb-20 gap-10 border-b border-[#1E3D2B]/5 pb-12">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
               <Sparkles size={18} className="text-[#6E8B3D]" />
@@ -229,7 +229,7 @@ const ProductGrid = () => {
         )}
 
         {/* Footer Action */}
-        <div className="mt-32 flex flex-col items-center gap-6">
+        <div className="mt-0 md:mt-32 flex flex-col items-center gap-6">
           <div className="h-20 w-[1px] bg-gradient-to-b from-[#1E3D2B]/20 to-transparent" />
           <Link 
             to="/shop" 

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
-    <section className="relative pt-24 pb-20 px-4 md:px-10 bg-[#F7F6F2] overflow-hidden ">
+    <section className="relative pt-20 pb-12 md:pt-24 md:pb-20 px-4 md:px-10 bg-[#F7F6F2] overflow-hidden ">
       {/* Decorative Background Element */}
       <div className="absolute top-0 right-0 w-1/3 h-full bg-[#E5E3DB]/40 -skew-x-12 translate-x-20 z-0" />
 
@@ -40,23 +40,25 @@ const Hero = () => {
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-5">
-              <Link to="/shop">
-                <button className="group relative px-10 py-5 rounded-full bg-[#1E3D2B] text-[#F7F6F2] font-bold text-xs uppercase tracking-[0.2em] overflow-hidden transition-all hover:pr-14 active:scale-95 shadow-2xl shadow-[#1E3D2B]/20">
-                  <span className="relative z-10">Shop Pure Products</span>
-                  <ArrowRight
-                    className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300"
-                    size={18}
-                  />
-                </button>
-              </Link>
+           <div className="flex flex-col sm:flex-row gap-5">
+  <Link to="/shop" className="w-full sm:w-[260px]">
+    <button className="w-full h-[60px] flex items-center justify-center gap-2 group relative rounded-full bg-[#1E3D2B] text-[#F7F6F2] font-bold text-xs uppercase tracking-[0.2em] overflow-hidden transition-all active:scale-95 shadow-2xl shadow-[#1E3D2B]/20">
+      
+      <span>Shop Pure Products</span>
 
-              <Link to="/process">
-                <button className="px-10 py-5 rounded-full border border-[#1E3D2B]/20 text-[#1E3D2B] font-bold text-xs uppercase tracking-[0.2em] hover:bg-white transition-all shadow-sm">
-                  Our Process
-                </button>
-              </Link>
-            </div>
+      <ArrowRight
+        className="opacity-0 group-hover:opacity-100 transition-all duration-300"
+        size={18}
+      />
+    </button>
+  </Link>
+
+  <Link to="/process" className="w-full sm:w-[260px]">
+    <button className="w-full h-[60px] flex items-center justify-center rounded-full border border-[#1E3D2B]/20 text-[#1E3D2B] font-bold text-xs uppercase tracking-[0.2em] hover:bg-white transition-all shadow-sm">
+      Our Process
+    </button>
+  </Link>
+</div>
 
             {/* Trust Line */}
             <div className="flex flex-wrap gap-10 pt-4">

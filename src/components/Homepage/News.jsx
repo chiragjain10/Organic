@@ -30,7 +30,7 @@ const Newsletter = () => {
   return (
     <section 
       ref={sectionRef}
-      className="py-24 md:py-32 bg-[#F7F6F2] overflow-hidden relative"
+      className="py-16 md:py-32 bg-[#F7F6F2] overflow-hidden relative"
     >
       {/* Decorative Background Elements */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-[1600px] pointer-events-none">

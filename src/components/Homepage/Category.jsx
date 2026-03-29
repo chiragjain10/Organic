@@ -82,11 +82,11 @@ const CategoryCard = ({ category }) => (
 
 const CategorySection = () => {
   return (
-    <section className="py-32 bg-[#F7F6F2] px-6 lg:px-12">
+    <section className="py-1 md:py-32 bg-[#F7F6F2] px-6 lg:px-12">
       <div className="max-w-[1300px] mx-auto">
         
         {/* --- MAGAZINE HEADER --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-20 items-end">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-12 md:mb-20 items-end">
           <div className="lg:col-span-8 space-y-6">
             <div className="flex items-center gap-3">
               <div className="w-8 h-[1px] bg-[#6E8B3D]" />
@@ -116,7 +116,7 @@ const CategorySection = () => {
         </div>
 
         {/* --- CENTERED FOOTER ACTION --- */}
-        <div className="mt-20 flex flex-col items-center gap-6">
+        <div className="mt-2 md:mt-20 flex flex-col items-center gap-6">
           <div className="h-20 w-[1px] bg-gradient-to-b from-[#1E3D2B]/20 to-transparent" />
           <Link 
             to="/shop" 

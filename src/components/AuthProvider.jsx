@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { auth, db } from "./Firebase";
-import { onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { AuthContext } from "./useAuth";
 
@@ -35,7 +35,13 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
-  const signup = (email, password) => createUserWithEmailAndPassword(auth, email, password);
+  const signup = async (email, password, displayName) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    if (displayName) {
+      await updateProfile(userCredential.user, { displayName });
+    }
+    return userCredential;
+  };
   const logout = () => signOut(auth);
 
   const value = { user, role, loading, login, signup, logout };

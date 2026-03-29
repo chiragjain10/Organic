@@ -19,8 +19,16 @@ const Signup = () => {
     try {
       await signup(email, password, displayName);
       navigate("/");
-    } catch {
-      setError("We couldn't create your account. Please try again.");
+    } catch (err) {
+      if (err.code === "auth/email-already-in-use") {
+        setError("This email ID is already registered. Please use a different email or sign in.");
+      } else if (err.code === "auth/weak-password") {
+        setError("Password should be at least 6 characters long.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("Please enter a valid email address.");
+      } else {
+        setError("We couldn't create your account. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

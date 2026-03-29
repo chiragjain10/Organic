@@ -14,7 +14,7 @@ const PremiumPromoBanner = () => {
   };
 
   return (
-    <section className="py-16 bg-[#FDFCFB] px-4 md:px-8">
+    <section className="py-12 md:py-16 bg-[#FDFCFB] px-4 md:px-8">
       <div 
         onMouseMove={handleMouseMove}
         onMouseEnter={() => setIsHovered(true)}

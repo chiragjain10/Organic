@@ -24,7 +24,7 @@ const ScienceSection = () => {
   ];
 
   return (
-    <section className="py-24 bg-[#F7F6F2] px-4 md:px-10 overflow-hidden">
+    <section className="py-16 md:py-24 bg-[#F7F6F2] px-4 md:px-10 overflow-hidden">
       <div className="max-w-[1300px] mx-auto relative">
         
         {/* Main Dark Container */}
@@ -121,7 +121,7 @@ const ScienceSection = () => {
                 <div className="pt-6">
                   <button className="group relative px-12 py-5 rounded-full bg-white text-[#1E3D2B] font-bold text-xs uppercase tracking-[0.2em] overflow-hidden transition-all hover:bg-[#6E8B3D] hover:text-white">
                     <span className="relative z-10 flex items-center gap-3">
-                      See How We Make It <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                      See more <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                     </span>
                   </button>
                 </div>

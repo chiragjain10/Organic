@@ -41,7 +41,7 @@ const TestimonialSection = () => {
   ];
 
   return (
-    <section className="py-24 bg-[#F7F6F2] px-6">
+    <section className="py-16 md:py-24 bg-[#F7F6F2] px-6">
       <div className="max-w-[1300px] mx-auto">
 
         {/* Header Section */}
