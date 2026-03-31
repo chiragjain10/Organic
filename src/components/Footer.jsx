@@ -137,7 +137,7 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="order-2 flex items-center gap-4">
+          {/* <div className="order-2 flex items-center gap-4">
             <div className="h-[1px] w-8 bg-[#1E3D2B]/10 hidden md:block"></div>
             <a href="https://letskillify.com" target="_blank" rel="noopener noreferrer" className="group relative py-1">
               <div className="flex items-center gap-2">
@@ -148,7 +148,7 @@ const Footer = () => {
               </div>
               <span className="absolute bottom-0 left-0 w-full h-[1px] bg-[#6E8B3D] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></span>
             </a>
-          </div>
+          </div> */}
 
           <div className="order-1 md:order-3">
             <button onClick={scrollToTop} className="group flex flex-col items-center gap-2">
