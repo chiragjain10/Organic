@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Eye, Lock, ShieldCheck } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -10,57 +11,91 @@ const Privacy = () => {
         description="Privacy policy and data handling practices at Leaf Burst."
       />
       <div className="max-w-[1300px] mx-auto space-y-12">
+
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-3">
-            <span className="w-8 h-[1px] bg-[#6E8B3D]" />
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#6E8B3D]">Data Security</span>
-            <span className="w-8 h-[1px] bg-[#6E8B3D]" />
-          </div>
           <h1 className="text-4xl md:text-6xl font-light text-[#1E3D2B] tracking-tighter">
             Privacy <span className="font-black italic text-[#6E8B3D]">Policy</span>
           </h1>
-          <p className="max-w-xl mx-auto text-sm text-[#6B4F3F] leading-relaxed opacity-80 pt-4">
-            Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          <p className="text-sm text-[#6B4F3F] opacity-80">
+            Last updated: {new Date().toLocaleDateString()}
           </p>
         </div>
 
-        <div className="bg-white rounded-[3.5rem] p-10 md:p-16 border border-[#1E3D2B]/5 shadow-sm space-y-10">
-          <section className="space-y-4">
+        <div className="bg-white rounded-[3.5rem] p-10 md:p-16 space-y-10">
+
+          {/* 1 */}
+          <section>
             <div className="flex items-center gap-3 text-[#1E3D2B]">
               <Eye size={24} className="text-[#6E8B3D]" />
               <h2 className="text-2xl font-bold">1. Information We Collect</h2>
             </div>
-            <p className="text-[#6B4F3F] leading-relaxed text-sm">
-              We collect information you provide directly to us when you create an account, make a purchase, or contact us for support. This may include your name, email address, phone number, shipping address, and payment information. We also automatically collect certain information about your device and how you interact with our website.
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              We collect personal information such as your name, email address, phone number, shipping address, and order details when you make a purchase or contact us. We may also collect device and browsing information automatically through cookies and analytics tools.
             </p>
           </section>
 
-          <section className="space-y-4">
+          {/* 2 */}
+          <section>
             <div className="flex items-center gap-3 text-[#1E3D2B]">
               <Lock size={24} className="text-[#6E8B3D]" />
               <h2 className="text-2xl font-bold">2. How We Use Your Information</h2>
             </div>
-            <p className="text-[#6B4F3F] leading-relaxed text-sm">
-              We use the information we collect to process your orders, communicate with you about your purchases, improve our services, and send you marketing communications (if you have opted in). We do not sell your personal data to third parties. Your data is solely used to enhance your experience with Leaf Burst.
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              Your information is used to process orders, provide customer support, improve our services, and communicate important updates. We may also send promotional messages if you have opted in.
             </p>
           </section>
 
-          <section className="space-y-4">
+          {/* 3 */}
+          <section>
             <div className="flex items-center gap-3 text-[#1E3D2B]">
               <ShieldCheck size={24} className="text-[#6E8B3D]" />
-              <h2 className="text-2xl font-bold">3. Data Security & Protection</h2>
+              <h2 className="text-2xl font-bold">3. Payment Information</h2>
             </div>
-            <p className="text-[#6B4F3F] leading-relaxed text-sm">
-              We implement a variety of security measures to maintain the safety of your personal information. Your transactions are processed through secure gateway providers and are not stored or processed on our servers. We use regular malware scanning and SSL technology to protect your data.
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              All payments are processed securely through trusted third-party payment gateways such as Paytm. We do not store or have access to your card details, UPI credentials, or banking information. Payment data is handled directly by the payment provider.
             </p>
           </section>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-[#1E3D2B]">4. Cookies and Tracking</h2>
-            <p className="text-[#6B4F3F] leading-relaxed text-sm">
-              Our website uses cookies and similar tracking technologies to track activity on our service and hold certain information. Cookies are files with small amount of data which may include an anonymous unique identifier. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent.
+          {/* 4 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">4. Data Sharing</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              We do not sell your personal information. However, we may share necessary data with third-party services such as payment gateways, delivery partners, and analytics providers to complete transactions and improve our services.
             </p>
           </section>
+
+          {/* 5 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">5. Cookies & Tracking</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              We use cookies and similar technologies to enhance your browsing experience, analyze website traffic, and understand user behavior. You can disable cookies in your browser settings if you prefer.
+            </p>
+          </section>
+
+          {/* 6 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">6. Data Security</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              We take reasonable measures to protect your personal information using secure technologies such as SSL encryption. However, no method of transmission over the internet is 100% secure.
+            </p>
+          </section>
+
+          {/* 7 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">7. User Rights</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              You have the right to access, update, or delete your personal information. You may contact us for any data-related requests.
+            </p>
+          </section>
+
+          {/* 8 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">8. Contact Us</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              If you have any questions regarding this Privacy Policy, you can contact us at leafburst99@gmail.com.
+            </p>
+          </section>
+
         </div>
       </div>
     </div>

@@ -75,29 +75,60 @@ const ProductDetail = () => {
 
   const buyNow = async () => {
     if (!product) return;
-    const ok = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
-    if (!ok) return;
-    const key = import.meta.env.VITE_RAZORPAY_KEY_ID;
-    if (!key) {
-      alert("Razorpay key missing");
-      return;
-    }
     const amount = Number(product.price || 0) * Number(quantity || 1);
-    const options = {
-      key,
-      amount: Math.round(amount * 100),
-      currency: "INR",
-      name: "Leaf Burst",
-      description: "Buy Now",
-      handler: function () {
-        alert("Payment successful");
-        navigate("/account");
+    
+    const merchantId = import.meta.env.VITE_PAYTM_MERCHANT_ID;
+    if (!merchantId) { alert("Paytm merchant ID missing"); return; }
+
+    const ok = await loadScript(`https://securegw.paytm.in/merchantpgpui/checkoutjs/merchants/${merchantId}.js`);
+    if (!ok) return;
+    
+    let order;
+    try {
+      const resp = await fetch("/api/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: String(amount),
+          currency: "INR"
+        }),
+      });
+      order = await resp.json();
+      if (!order || !order.txnToken) throw new Error("Order creation failed");
+    } catch {
+      order = null;
+    }
+    
+    if (!order) return;
+
+    var config = {
+      "root": "",
+      "flow": "DEFAULT",
+      "data": {
+        "orderId": order.orderId,
+        "token": order.txnToken,
+        "tokenType": "TXN_TOKEN",
+        "amount": String(amount)
       },
-      prefill: {},
-      theme: { color: "#1E3D2B" },
+      "handler": {
+        "notifyMerchant": function(eventName,data){
+          console.log("notifyEvent => ",eventName);
+        },
+        "transactionStatus": async function(data){
+          window.Paytm.CheckoutJS.close();
+          alert("Payment successful");
+          navigate("/account");
+        }
+      }
     };
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+
+    if(window.Paytm && window.Paytm.CheckoutJS){
+        window.Paytm.CheckoutJS.init(config).then(function onSuccess() {
+            window.Paytm.CheckoutJS.invoke();
+        }).catch(function onError(error){
+            console.log("error => ",error);
+        });
+    }
   };
 
   if (loading) {

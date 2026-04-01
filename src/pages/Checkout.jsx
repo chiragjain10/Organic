@@ -24,7 +24,7 @@ export default function Checkout() {
   const [step, setStep] = useState(1);
   const [address, setAddress] = useState({ firstName: "", lastName: "", line1: "", line2: "", zip: "", city: "", state: "" });
   const [shipping, setShipping] = useState("standard");
-  const [payment, setPayment] = useState("razorpay");
+  const [payment, setPayment] = useState("paytm");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -69,44 +69,63 @@ export default function Checkout() {
     return ref.id;
   };
 
-  const payWithRazorpay = async () => {
-    const ok = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
+  const payWithPaytm = async () => {
+    const merchantId = import.meta.env.VITE_PAYTM_MERCHANT_ID;
+    if (!merchantId) { alert("Paytm merchant ID missing"); return; }
+    
+    const ok = await loadScript(`https://securegw.paytm.in/merchantpgpui/checkoutjs/merchants/${merchantId}.js`);
     if (!ok) return;
-    const key = import.meta.env.VITE_RAZORPAY_KEY_ID;
-    if (!key) { alert("Razorpay key missing"); return; }
+    
     let order;
     try {
       const resp = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: Math.round(total * 100),
+          amount: String(total),
           currency: "INR",
           notes: { userId: user.uid, name: `${address.firstName} ${address.lastName}` },
         }),
       });
       order = await resp.json();
-      if (!order || !order.id) throw new Error("Order creation failed");
+      if (!order || !order.txnToken) throw new Error("Order creation failed");
     } catch {
       order = null;
     }
-    const options = {
-      key,
-      amount: Math.round(total * 100),
-      currency: "INR",
-      name: "Leaf Burst",
-      description: "Order Payment",
-      order_id: order?.id,
-      handler: async function (resp) {
-        const oid = await placeOrderDoc("paid", { provider: "razorpay", orderId: order?.id, paymentId: resp.razorpay_payment_id });
-        navigate("/orders");
+    
+    if (!order) return;
+
+    var config = {
+      "root": "",
+      "flow": "DEFAULT",
+      "data": {
+        "orderId": order.orderId,
+        "token": order.txnToken,
+        "tokenType": "TXN_TOKEN",
+        "amount": String(total)
       },
-      prefill: { name: `${address.firstName} ${address.lastName}` },
-      notes: { cartItems: items.length },
-      theme: { color: "#1E3D2B" },
+      "handler": {
+        "notifyMerchant": function(eventName,data){
+          console.log("notifyMerchant handler function called");
+          console.log("eventName => ",eventName);
+          console.log("data => ",data);
+        },
+        "transactionStatus": async function(data){
+          console.log("transaction status: ", data);
+          window.Paytm.CheckoutJS.close();
+          const oid = await placeOrderDoc("paid", { provider: "paytm", orderId: order.orderId, paymentId: data.BANKTXNID || "mock_bank_txn" });
+          navigate("/orders");
+        }
+      }
     };
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+
+    if(window.Paytm && window.Paytm.CheckoutJS){
+        window.Paytm.CheckoutJS.init(config).then(function onSuccess() {
+            window.Paytm.CheckoutJS.invoke();
+        }).catch(function onError(error){
+            console.log("error => ",error);
+        });
+    }
   };
 
   const placeCodOrder = async () => {
@@ -152,8 +171,8 @@ export default function Checkout() {
             <h3 className="text-xl font-black text-[#1E3D2B] mb-4">Payment</h3>
             <div className="space-y-3">
               <label className="flex items-center gap-3">
-                <input type="radio" name="pay" checked={payment==="razorpay"} onChange={()=>setPayment("razorpay")} />
-                <span>Razorpay (UPI, Cards, NetBanking)</span>
+                <input type="radio" name="pay" checked={payment==="paytm"} onChange={()=>setPayment("paytm")} />
+                <span>Paytm (UPI, Cards, NetBanking)</span>
               </label>
               <label className="flex items-center gap-3">
                 <input type="radio" name="pay" checked={payment==="cod"} onChange={()=>setPayment("cod")} />
@@ -166,10 +185,10 @@ export default function Checkout() {
             <h3 className="text-xl font-black text-[#1E3D2B] mb-4">Review & place order</h3>
             <button
               disabled={items.length===0}
-              onClick={payment==="razorpay" ? payWithRazorpay : placeCodOrder}
+              onClick={payment==="paytm" ? payWithPaytm : placeCodOrder}
               className="px-8 py-4 rounded-2xl bg-[#1E3D2B] text-white font-black"
             >
-              {payment==="razorpay" ? "Pay with Razorpay" : "Place COD Order"}
+              {payment==="paytm" ? "Pay with Paytm" : "Place COD Order"}
             </button>
           </div>
         </div>

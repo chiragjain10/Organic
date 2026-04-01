@@ -10,57 +10,74 @@ const Terms = () => {
         description="Terms and conditions for using Leaf Burst services."
       />
       <div className="max-w-[1300px] mx-auto space-y-12">
+
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-3">
-            <span className="w-8 h-[1px] bg-[#6E8B3D]" />
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#6E8B3D]">Legal Information</span>
-            <span className="w-8 h-[1px] bg-[#6E8B3D]" />
-          </div>
           <h1 className="text-4xl md:text-6xl font-light text-[#1E3D2B] tracking-tighter">
             Terms & <span className="font-black italic text-[#6E8B3D]">Conditions</span>
           </h1>
-          <p className="max-w-xl mx-auto text-sm text-[#6B4F3F] leading-relaxed opacity-80 pt-4">
-            Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          <p className="text-sm text-[#6B4F3F] opacity-80">
+            Last updated: {new Date().toLocaleDateString()}
           </p>
         </div>
 
-        <div className="bg-white rounded-[3.5rem] p-10 md:p-16 border border-[#1E3D2B]/5 shadow-sm space-y-10">
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 text-[#1E3D2B]">
-              <FileText size={24} className="text-[#6E8B3D]" />
-              <h2 className="text-2xl font-bold">1. Agreement to Terms</h2>
-            </div>
-            <p className="text-[#6B4F3F] leading-relaxed text-sm">
-              By accessing our website, you agree to be bound by these Terms and Conditions and agree that you are responsible for the agreement with any applicable local laws. If you disagree with any of these terms, you are prohibited from accessing this site. The materials contained in this Website are protected by copyright and trade mark law.
+        <div className="bg-white rounded-[3.5rem] p-10 md:p-16 space-y-10">
+
+          {/* 1 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">1. Agreement to Terms</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              By accessing and using the Leaf Burst website, you agree to comply with and be bound by these Terms and Conditions. If you do not agree, please do not use our website.
             </p>
           </section>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 text-[#1E3D2B]">
-              <Scale size={24} className="text-[#6E8B3D]" />
-              <h2 className="text-2xl font-bold">2. Use License</h2>
-            </div>
-            <p className="text-[#6B4F3F] leading-relaxed text-sm">
-              Permission is granted to temporarily download one copy of the materials on Leaf Burst's Website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not modify or copy the materials, use the materials for any commercial purpose, or remove any copyright or other proprietary notations.
+          {/* 2 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">2. Products & Usage</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              Leaf Burst provides natural and herbal products including powders and leaves. These products are intended for general consumption and wellness purposes only. We do not guarantee medical results.
             </p>
           </section>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 text-[#1E3D2B]">
-              <AlertCircle size={24} className="text-[#6E8B3D]" />
-              <h2 className="text-2xl font-bold">3. Limitations & Liability</h2>
-            </div>
-            <p className="text-[#6B4F3F] leading-relaxed text-sm">
-              Leaf Burst or its suppliers will not be hold accountable for any damages that will arise with the use or inability to use the materials on Leaf Burst's Website, even if Leaf Burst or an authorized representative of this Website has been notified, orally or written, of the possibility of such damage.
+          {/* 3 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">3. Payments</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              All payments on this website are securely processed through third-party payment gateways including Paytm. By making a purchase, you agree to provide accurate payment details. We are not responsible for any transaction failures due to bank or gateway issues.
             </p>
           </section>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-[#1E3D2B]">4. Revisions and Errata</h2>
-            <p className="text-[#6B4F3F] leading-relaxed text-sm">
-              The materials appearing on Leaf Burst's Website may include technical, typographical, or photographic errors. Leaf Burst will not promise that any of the materials in this Website are accurate, complete, or current. Leaf Burst may change the materials contained on its Website at any time without notice.
+          {/* 4 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">4. No Return & No Refund Policy</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              All purchases made on Leaf Burst are final. We do not offer returns, exchanges, or refunds once an order is placed and confirmed. Please ensure that you review your order carefully before making a purchase.
             </p>
           </section>
+
+          {/* 5 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">5. Order Acceptance & Cancellation</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              We reserve the right to refuse or cancel any order at our discretion due to product availability, pricing errors, or suspected fraudulent activity.
+            </p>
+          </section>
+
+          {/* 6 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">6. Limitation of Liability</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              Leaf Burst shall not be held liable for any indirect, incidental, or consequential damages arising from the use or inability to use our products or services.
+            </p>
+          </section>
+
+          {/* 7 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">7. Changes to Terms</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              We may update these Terms and Conditions at any time without prior notice. Continued use of the website constitutes acceptance of the updated terms.
+            </p>
+          </section>
+
         </div>
       </div>
     </div>
