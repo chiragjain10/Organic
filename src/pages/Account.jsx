@@ -126,9 +126,9 @@ const Account = () => {
                   <span className="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-widest border border-white/10">
                     Organic Member
                   </span>
-                  <span className="px-4 py-1.5 rounded-full bg-[#2F6F4E]/20 text-[#2F6F4E] text-[10px] font-black uppercase tracking-widest border border-[#2F6F4E]/20">
+                  {/* <span className="px-4 py-1.5 rounded-full bg-[#2F6F4E]/20 text-[#2F6F4E] text-[10px] font-black uppercase tracking-widest border border-[#2F6F4E]/20">
                     2,450 Points
-                  </span>
+                  </span> */}
                 </div>
               </div>
             </div>
@@ -242,7 +242,7 @@ const Account = () => {
             </div>
 
             {/* Loyalty Banner */}
-            <div className="bg-[#2F6F4E] rounded-[48px] p-10 md:p-14 text-white relative overflow-hidden shadow-2xl shadow-[#2F6F4E]/20">
+            {/* <div className="bg-[#2F6F4E] rounded-[48px] p-10 md:p-14 text-white relative overflow-hidden shadow-2xl shadow-[#2F6F4E]/20">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="text-center md:text-left">
@@ -253,7 +253,7 @@ const Account = () => {
                   Redeem Points
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
