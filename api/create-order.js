@@ -20,7 +20,12 @@ export default async function handler(req, res) {
     const data = {
       orderId: receipt,
       txnToken: "mock_txn_token_" + Date.now(),
-      amount: amount
+      amount: amount,
+      notes: {
+        ...notes,
+        ip_rights: "Leaf Burst Intellectual Property",
+        jurisdiction: "Indore, M.P."
+      }
     };
     
     res.status(200).json(data);

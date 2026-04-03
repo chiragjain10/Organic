@@ -345,10 +345,24 @@ const ProductDetail = () => {
                   <Heart size={20} />
                 </button>
               </div>
-              <div className="flex gap-4 pt-2">
+              <div className="flex flex-col gap-4 pt-2">
                 <button onClick={buyNow} className="flex-1 h-12 rounded-[24px] bg-[#1E3D2B] text-white font-black text-xs uppercase tracking-[0.2em] hover:bg-[#6E8B3D] transition-all">
                   Buy Now
                 </button>
+                <div className="pt-6 border-t border-[#E6CCB2]/20 space-y-3">
+                  <div>
+                    <h5 className="text-[9px] font-black uppercase tracking-widest text-[#1E3D2B] mb-1">Intellectual Property Rights</h5>
+                    <p className="text-[9px] leading-relaxed text-[#6B4F3F]/60">
+                      Materials, logos, and product designs are the property of <strong>Leaf Burst</strong>. Reserved and protected globally.
+                    </p>
+                  </div>
+                  <div>
+                    <h5 className="text-[9px] font-black uppercase tracking-widest text-[#1E3D2B] mb-1">Jurisdiction</h5>
+                    <p className="text-[9px] leading-relaxed text-[#6B4F3F]/60">
+                      Disputes are subject to the exclusive jurisdiction of the courts in <strong>Indore, M.P.</strong>
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 

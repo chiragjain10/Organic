@@ -174,10 +174,7 @@ export default function Checkout() {
                 <input type="radio" name="pay" checked={payment==="paytm"} onChange={()=>setPayment("paytm")} />
                 <span>Paytm (UPI, Cards, NetBanking)</span>
               </label>
-              <label className="flex items-center gap-3">
-                <input type="radio" name="pay" checked={payment==="cod"} onChange={()=>setPayment("cod")} />
-                <span>Cash on Delivery</span>
-              </label>
+              
             </div>
           </div>
           {/* Step 4: Review */}
@@ -186,10 +183,26 @@ export default function Checkout() {
             <button
               disabled={items.length===0}
               onClick={payment==="paytm" ? payWithPaytm : placeCodOrder}
-              className="px-8 py-4 rounded-2xl bg-[#1E3D2B] text-white font-black"
+              className="px-8 py-4 rounded-2xl bg-[#1E3D2B] text-white font-black w-full"
             >
               {payment==="paytm" ? "Pay with Paytm" : "Place COD Order"}
             </button>
+            <div className="mt-8 pt-6 border-t border-[#1E3D2B]/5 space-y-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#1E3D2B] mb-1">Intellectual Property Rights</p>
+                <p className="text-[10px] leading-relaxed text-[#6B4F3F]/60">
+                  All content, artwork, and designs on this platform are the exclusive property of <strong>Leaf Burst</strong>. 
+                  Unauthorized reproduction or use is strictly prohibited and protected by applicable copyright laws.
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#1E3D2B] mb-1">Jurisdiction Clause</p>
+                <p className="text-[10px] leading-relaxed text-[#6B4F3F]/60">
+                  All disputes and legal matters arising from transactions on this site are subject to the 
+                  exclusive jurisdiction of the courts in <strong>Indore, Madhya Pradesh</strong>.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         {/* Summary */}
