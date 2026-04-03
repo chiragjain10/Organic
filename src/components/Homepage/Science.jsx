@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sun, Shield, Leaf, Beaker, ArrowRight, Sparkles } from 'lucide-react';
-
+import { Link } from 'react-router-dom';
 const ScienceSection = () => {
   const features = [
     { 
@@ -119,11 +119,13 @@ const ScienceSection = () => {
 
                 {/* Action CTA */}
                 <div className="pt-6">
+                  <Link to="/about" className="w-full sm:w-[260px]">
                   <button className="group relative px-12 py-5 rounded-full bg-white text-[#1E3D2B] font-bold text-xs uppercase tracking-[0.2em] overflow-hidden transition-all hover:bg-[#6E8B3D] hover:text-white">
                     <span className="relative z-10 flex items-center gap-3">
                       See more <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                     </span>
                   </button>
+                  </Link>
                 </div>
               </div>
             </div>

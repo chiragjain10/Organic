@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Leaf, 
   BadgeCheck, 
@@ -52,13 +53,17 @@ const About = () => {
               </p>
 
               <div className="flex gap-4 pt-6">
+                <Link to="/shop" className="">
                  <button className="px-8 py-4 bg-[#1E3D2B] text-white rounded-full text-sm font-bold hover:bg-[#6E8B3D] transition-colors flex items-center gap-2 group">
                     Shop Now
                     <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                  </button>
+                 </Link>
+                 <Link to="/shop" className="">
                  <button className="px-8 py-4 border border-[#1E3D2B]/10 rounded-full text-sm font-bold text-[#1E3D2B] hover:bg-[#1E3D2B]/5 transition-colors">
                     Explore Products
                  </button>
+                 </Link>
               </div>
             </div>
 

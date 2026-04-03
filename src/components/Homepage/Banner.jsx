@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, Sun, ShieldCheck } from 'lucide-react';
-
+import { Link } from 'react-router-dom';
 const PremiumPromoBanner = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -53,12 +53,14 @@ const PremiumPromoBanner = () => {
 
             <div className="flex flex-col items-start gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 pt-4">
+                <Link to="/shop" className="w-full sm:w-[260px]">
                 <button className="group relative flex items-center gap-12 bg-[#FDFCFB] text-[#15291E] pl-8 pr-4 py-4 rounded-full transition-all duration-500 hover:pr-8 hover:bg-[#A3B882] hover:text-white">
                   <span className="text-xs font-bold uppercase tracking-widest">Shop Pure Products</span>
                   <div className="w-10 h-10 rounded-full bg-[#15291E] text-white flex items-center justify-center group-hover:bg-white group-hover:text-[#15291E] transition-colors">
                     <ArrowRight size={18} />
                   </div>
                 </button>
+                </Link>
                 
                 <div className="flex flex-col gap-1 border-l border-white/10 pl-6">
                   <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8B9D77]">Get 15% Off Your First Order</span>

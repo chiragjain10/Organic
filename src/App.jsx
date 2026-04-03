@@ -30,6 +30,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import ReturnPolicy from "./pages/ReturnPolicy";
 import AdminLogin from "./pages/Admin/AdminLogin";
+import NotFound from "./pages/NotFound";
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -65,6 +66,7 @@ const AppRoutes = () => {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/return-policy" element={<ReturnPolicy />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       {!hideChrome && <Footer />}
     </>

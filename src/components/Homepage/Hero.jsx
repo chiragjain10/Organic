@@ -53,7 +53,7 @@ const Hero = () => {
                 </button>
               </Link>
 
-              <Link to="/process" className="w-full sm:w-[260px]">
+              <Link to="/about" className="w-full sm:w-[260px]">
                 <button className="w-full h-[60px] flex items-center justify-center rounded-full border border-[#1E3D2B]/20 text-[#1E3D2B] font-bold text-xs uppercase tracking-[0.2em] hover:bg-white transition-all shadow-sm">
                   Our Process
                 </button>
