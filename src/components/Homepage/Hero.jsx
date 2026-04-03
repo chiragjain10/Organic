@@ -116,15 +116,18 @@ const Hero = () => {
   </div>
 
   {/* Floating Price Tag (Refined for collision safety on mobile) */}
+  <Link to="/shop" className="">
   <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:-left-8 bg-white p-4 sm:p-5 rounded-3xl shadow-[0_20px_40px_-5px_rgba(30,61,43,0.15)] border border-[#1E3D2B]/5 flex flex-row md:flex-col items-center gap-3 md:gap-1 group cursor-pointer hover:-translate-y-2 transition-all duration-300">
     <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#1E3D2B] flex items-center justify-center text-white shadow-lg shadow-[#1E3D2B]/20 transition-colors duration-300 group-hover:bg-[#6E8B3D]">
       <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-0.5" />
     </div>
+    
     <div className="flex flex-col items-start md:items-center">
       <p className="text-[9px] font-black uppercase text-[#1E3D2B]/40 tracking-[0.2em]">Add to Cart</p>
       <p className="text-base md:text-xl font-bold text-[#1E3D2B]">₹199/-</p>
     </div>
   </div>
+  </Link>
 </div>
 
         </div>
