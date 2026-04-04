@@ -77,6 +77,21 @@ const Terms = () => {
               We may update these Terms and Conditions at any time without prior notice. Continued use of the website constitutes acceptance of the updated terms.
             </p>
           </section>
+                    {/* 8 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">8. Governing Law & Jurisdiction</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              These Terms and Conditions shall be governed by and interpreted in accordance with the laws of India. Any disputes arising out of or related to the use of this website shall be subject to the exclusive jurisdiction of the courts located in your operating region.
+            </p>
+          </section>
+
+          {/* 9 */}
+          <section>
+            <h2 className="text-2xl font-bold text-[#1E3D2B]">9. Intellectual Property Rights</h2>
+            <p className="text-sm text-[#6B4F3F] mt-3">
+              All content on this website, including text, graphics, logos, images, and product descriptions, is the property of Leaf Burst and is protected by applicable intellectual property laws. You may not copy, reproduce, distribute, or use any content without prior written permission.
+            </p>
+          </section>
 
         </div>
       </div>
