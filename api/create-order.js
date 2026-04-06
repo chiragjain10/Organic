@@ -11,18 +11,17 @@ export default async function handler(req, res) {
     const mid = (process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762").trim();
     const mkey = (process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k").trim();
     
-    // Prioritize the website name from your .env
-    const website = process.env.PAYTM_WEBSITE || "DEFAULT"; 
-    const environment = process.env.PAYTM_ENVIRONMENT || "production"; 
+    // Most staging accounts need WEBSTAGING and Retail
+    const website = process.env.PAYTM_WEBSITE || "WEBSTAGING"; 
+    const environment = process.env.PAYTM_ENVIRONMENT || "staging"; 
 
-    const { amount, receipt = `ORD${Math.floor(Date.now() / 1000)}` } = req.body || {};
+    const { amount, receipt = `ORD${Date.now()}` } = req.body || {};
 
     if (!amount || parseFloat(amount) <= 0) {
       res.status(400).json({ error: "Invalid amount" });
       return;
     }
 
-    // Paytm requires amount as a string with 2 decimal places (e.g. "1.00")
     const formattedAmount = Number(amount).toFixed(2).toString();
 
     const paytmParams = {
@@ -37,10 +36,14 @@ export default async function handler(req, res) {
           currency: "INR",
         },
         userInfo: {
-          custId: "CUST" + Math.floor(Math.random() * 1000000),
+          custId: "CUST001", // Very simple ID to rule out character issues
         },
       },
     };
+    
+    // Some accounts require these even in v1 initiateTransaction
+    // paytmParams.body.industryTypeId = "Retail";
+    // paytmParams.body.channelId = "WEB";
 
     const checksum = await PaytmChecksum.generateSignature(JSON.stringify(paytmParams.body), mkey);
     paytmParams.head = {
