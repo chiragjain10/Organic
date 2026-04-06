@@ -8,10 +8,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    const mid = process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762";
-    const mkey = process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k";
-    const website = process.env.PAYTM_WEBSITE || "WEBSTAGING"; // Use "DEFAULT" for production
-    const environment = process.env.PAYTM_ENVIRONMENT || "staging"; // "staging" or "production"
+    const mid = (process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762").trim();
+    const mkey = (process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k").trim();
+    
+    // For many newer accounts, even staging uses "DEFAULT". 
+    // Try "DEFAULT" if "WEBSTAGING" continues to give 501.
+    const website = process.env.PAYTM_WEBSITE || "WEBSTAGING"; 
+    const environment = process.env.PAYTM_ENVIRONMENT || "staging"; 
 
     const { amount, currency = "INR", receipt = `ORDR${Date.now()}`, notes = {} } = req.body || {};
 
@@ -20,7 +23,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Ensure amount is string with 2 decimal places
     const formattedAmount = parseFloat(amount).toFixed(2);
 
     const paytmParams = {
@@ -44,6 +46,8 @@ export default async function handler(req, res) {
     paytmParams.head = {
       signature: checksum,
     };
+
+    console.log("Sending to Paytm:", JSON.stringify({ ...paytmParams, head: { signature: "REDACTED" } }));
 
     const host = environment === "production" ? "securegw.paytm.in" : "securegw-stage.paytm.in";
     const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${receipt}`;
