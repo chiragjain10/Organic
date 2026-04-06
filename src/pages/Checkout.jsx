@@ -5,6 +5,16 @@ import { collection, addDoc, doc, setDoc, serverTimestamp } from "firebase/fires
 import { useNavigate } from "react-router-dom";
 import { useShopData } from "../components/ShopDataProvider";
 
+function loadScript(src) {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 export default function Checkout() {
   const { user } = useAuth();
   const shop = useShopData();
@@ -20,7 +30,7 @@ export default function Checkout() {
     state: ""
   });
   const [shipping, setShipping] = useState("standard");
-  const [payment, setPayment] = useState("cod");
+  const [payment, setPayment] = useState("paytm");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,56 +56,140 @@ export default function Checkout() {
     return true;
   };
 
-  const handlePlaceOrder = async () => {
+  const placeOrderDoc = async (status, paymentInfo = {}) => {
+    const orderData = {
+      userId: user.uid,
+      customerEmail: user.email,
+      customerName: `${address.firstName} ${address.lastName}`,
+      items,
+      address,
+      shipping,
+      paymentMethod: paymentInfo.provider || "paytm",
+      subtotal,
+      shippingFee,
+      total,
+      status: status, // "paid"
+      payment: paymentInfo,
+      createdAt: serverTimestamp(),
+    };
+
+    const userOrdersCol = collection(db, "users", user.uid, "orders");
+    const userOrderRef = await addDoc(userOrdersCol, orderData);
+    await setDoc(doc(db, "orders", userOrderRef.id), orderData);
+
+    try {
+      await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: `New Order ${userOrderRef.id}`,
+          text: `Order ${userOrderRef.id}\nTotal: ₹${total}\nShipping: ${shipping}\nCustomer: ${orderData.customerName}\nAddress: ${address.line1}, ${address.city} ${address.zip}`,
+        }),
+      });
+    } catch (e) {
+      console.warn("Email failed:", e.message);
+    }
+    return userOrderRef.id;
+  };
+
+  const payWithPaytm = async () => {
     if (!validateForm()) return;
 
+    const mid = "YTxVaZ24286063946762";
+    const environment = "production";
+    const host = environment === "production" ? "securegw.paytm.in" : "securegw-stage.paytm.in";
+    
     setLoading(true);
+
+    const ok = await loadScript(`https://${host}/merchantpgpui/checkoutjs/merchants/${mid}.js`);
+    if (!ok) {
+      setLoading(false);
+      alert("Failed to load Paytm SDK. Please disable ad-blockers.");
+      return;
+    }
+
     try {
-      const orderData = {
-        userId: user.uid,
-        customerEmail: user.email,
-        customerName: `${address.firstName} ${address.lastName}`,
-        items,
-        address,
-        shipping,
-        paymentMethod: payment,
-        subtotal,
-        shippingFee,
-        total,
-        status: "pending", // Default status
-        createdAt: serverTimestamp(),
+      const resp = await fetch("/api/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: total.toFixed(2),
+          userId: user.uid,
+          items: items,
+          address: address,
+          shipping: shipping
+        }),
+      });
+
+      const orderData = await resp.json();
+      if (!resp.ok || !orderData.txnToken) throw new Error(orderData.error || "Failed to initiate payment");
+
+      const config = {
+        "root": "",
+        "flow": "DEFAULT",
+        "data": {
+          "orderId": orderData.orderId,
+          "token": orderData.txnToken,
+          "tokenType": "TXN_TOKEN",
+          "amount": orderData.amount
+        },
+        "handler": {
+          "transactionStatus": async function(data) {
+            console.log("Paytm Status:", data);
+            window.Paytm.CheckoutJS.close();
+            
+            if (data.STATUS === "TXN_SUCCESS") {
+              setLoading(true);
+              try {
+                const oid = await placeOrderDoc("paid", { 
+                  provider: "paytm", 
+                  orderId: orderData.orderId, 
+                  paymentId: data.TXNID || data.BANKTXNID,
+                  response: data
+                });
+                navigate("/orders?status=success&id=" + oid);
+              } catch (err) {
+                console.error("Order save failed:", err);
+                navigate("/orders?status=error");
+              } finally {
+                setLoading(false);
+              }
+            } else {
+              alert(`Payment Failed: ${data.RESPMSG || "Unknown error"}`);
+              setLoading(false);
+            }
+          },
+          "notifyMerchant": function(eventName, data) {
+            console.log("Notify:", eventName, data);
+          }
+        }
       };
 
-      // 1. Save to user's private orders collection
-      const userOrdersCol = collection(db, "users", user.uid, "orders");
-      const userOrderRef = await addDoc(userOrdersCol, orderData);
-
-      // 2. Save to global orders collection (for admin view)
-      await setDoc(doc(db, "orders", userOrderRef.id), orderData);
-
-      // 3. Optional: Send notification email
-      try {
-        await fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            subject: `New Order ${userOrderRef.id}`,
-            text: `Order ${userOrderRef.id}\nTotal: ₹${total}\nShipping: ${shipping}\nCustomer: ${orderData.customerName}\nAddress: ${address.line1}, ${address.city} ${address.zip}`,
-          }),
+      if (window.Paytm && window.Paytm.CheckoutJS) {
+        window.Paytm.CheckoutJS.init(config).then(function() {
+          setLoading(false);
+          window.Paytm.CheckoutJS.invoke();
+        }).catch(function(err) {
+          console.error("Paytm Init Error:", err);
+          setLoading(false);
         });
-      } catch (e) {
-        console.warn("Email notification skipped or failed:", e.message);
-        // We don't alert the user here because the order is already saved in Firestore
       }
-
-      console.log("Order placed successfully:", userOrderRef.id);
-      alert("Order placed successfully!");
-      navigate("/orders");
     } catch (error) {
-      console.error("Error placing order:", error);
-      alert("Order Error: Failed to place order. Please try again.");
-    } finally {
+      console.error("Payment Error:", error);
+      alert("Error: " + error.message);
       setLoading(false);
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (payment === "paytm") {
+      await payWithPaytm();
+    } else {
+      // COD Logic if needed
+      if (!validateForm()) return;
+      setLoading(true);
+      await placeOrderDoc("pending", { provider: "cod" });
+      navigate("/orders");
     }
   };
 
