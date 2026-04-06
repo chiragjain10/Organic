@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         mid: mid,
         websiteName: websiteName,
         orderId: orderId,
-        callbackUrl: `https://leafburst.in/api/paytm-callback`,
+        callbackUrl: `https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=${orderId}`,
         txnAmount: {
           value: formattedAmount,
           currency: "INR",
