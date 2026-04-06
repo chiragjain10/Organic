@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. STAGING CONFIGURATION
+    // 1. STRICT STAGING CONFIGURATION
     const mid = (process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762").trim();
     const mkey = (process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k").trim();
     const websiteName = "WEBSTAGING";
@@ -24,13 +24,18 @@ export default async function handler(req, res) {
     const formattedAmount = parseFloat(amount).toFixed(2);
     const custId = userId.replace(/[^a-zA-Z0-9]/g, "");
 
+    // Use local callback for staging as requested
+    const callbackUrl = process.env.NODE_ENV === "production" 
+      ? `https://leafburst.in/api/paytm-callback` 
+      : `http://localhost:3000/api/paytm-callback`;
+
     const paytmParams = {
       body: {
         requestType: "Payment",
         mid: mid,
         websiteName: websiteName,
         orderId: orderId,
-        callbackUrl: `https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=${orderId}`,
+        callbackUrl: callbackUrl,
         txnAmount: {
           value: formattedAmount,
           currency: "INR",
@@ -53,7 +58,7 @@ export default async function handler(req, res) {
     // 4. CALL INITIATE TRANSACTION API
     const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`;
 
-    console.log("PAYTM STAGING REQUEST:", bodyString);
+    console.log("PAYTM STAGING REQUEST PAYLOAD:", bodyString);
 
     const response = await axios.post(url, paytmParams, {
       headers: { "Content-Type": "application/json" },
@@ -73,7 +78,8 @@ export default async function handler(req, res) {
     } else {
       res.status(400).json({ 
         error: resultInfo?.resultMsg || "System Error from Paytm", 
-        details: resultInfo 
+        details: resultInfo,
+        sent_body: paytmParams.body
       });
     }
   } catch (error) {

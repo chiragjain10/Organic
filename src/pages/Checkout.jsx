@@ -102,7 +102,7 @@ export default function Checkout() {
     
     setLoading(true);
 
-    // 2. LOAD STAGING SDK
+    // 2. LOAD STAGING SDK SCRIPT
     const sdkUrl = `https://${host}/merchantpgpui/checkoutjs/merchants/${mid}.js`;
     const ok = await loadScript(sdkUrl);
     if (!ok) {
@@ -112,7 +112,8 @@ export default function Checkout() {
     }
 
     try {
-      // 3. CALL BACKEND TO GET TXN TOKEN
+      // 3. CALL BACKEND TO INITIATE TRANSACTION
+      console.log("Initiating Paytm transaction for user:", user.uid);
       const resp = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -123,13 +124,13 @@ export default function Checkout() {
       });
 
       const orderData = await resp.json();
-      console.log("BACKEND RESPONSE:", orderData);
+      console.log("BACKEND API RESPONSE:", orderData);
 
       if (!resp.ok || !orderData.txnToken) {
-        throw new Error(orderData.error || "Failed to initiate payment");
+        throw new Error(orderData.error || "Failed to initiate payment. Check server logs.");
       }
 
-      // 4. INITIALIZE CHECKOUT JS
+      // 4. CONFIGURE CHECKOUT JS
       const config = {
         "root": "",
         "flow": "DEFAULT",
@@ -141,49 +142,54 @@ export default function Checkout() {
         },
         "handler": {
           "transactionStatus": async function(data) {
-            console.log("PAYTM STATUS HANDLER:", data);
+            console.log("PAYTM TRANSACTION STATUS RECEIVED:", data);
             window.Paytm.CheckoutJS.close();
             
             if (data.STATUS === "TXN_SUCCESS") {
               setLoading(true);
               try {
+                // Save order only after verified success
                 const oid = await placeOrderDoc("paid", { 
                   provider: "paytm", 
                   orderId: orderData.orderId, 
                   paymentId: data.TXNID || data.BANKTXNID,
                   response: data
                 });
+                console.log("Order saved successfully in Firestore:", oid);
                 navigate("/orders?status=success&id=" + oid);
               } catch (err) {
-                console.error("Order save failed:", err);
+                console.error("Firestore order save failed after successful payment:", err);
+                alert("Payment successful but order record failed to save. Please contact support.");
                 navigate("/orders?status=error");
               } finally {
                 setLoading(false);
               }
             } else {
-              alert(`Payment Failed: ${data.RESPMSG || "Transaction was not successful"}`);
+              console.warn("Payment failed or cancelled:", data.RESPMSG);
+              alert(`Payment Failed: ${data.RESPMSG || "The transaction was not successful."}`);
               setLoading(false);
             }
           },
           "notifyMerchant": function(eventName, data) {
-            console.log("PAYTM NOTIFY:", eventName, data);
+            console.log("PAYTM SDK NOTIFICATION:", eventName, data);
           }
         }
       };
 
+      // 5. INVOKE PAYTM CHECKOUT
       if (window.Paytm && window.Paytm.CheckoutJS) {
         window.Paytm.CheckoutJS.init(config).then(function() {
           setLoading(false);
           window.Paytm.CheckoutJS.invoke();
         }).catch(function(err) {
-          console.error("Paytm JS Init Error:", err);
+          console.error("Paytm CheckoutJS initialization failed:", err);
           setLoading(false);
-          alert("Payment window failed to open. Check console.");
+          alert("Could not open the payment window. Check console for details.");
         });
       }
     } catch (error) {
-      console.error("PAYTM FRONTEND ERROR:", error);
-      alert("Error: " + error.message);
+      console.error("PAYTM INTEGRATION ERROR:", error);
+      alert("Checkout Error: " + error.message);
       setLoading(false);
     }
   };
