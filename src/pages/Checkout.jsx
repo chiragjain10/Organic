@@ -128,8 +128,7 @@ export default function Checkout() {
       // Save order doc as pending before payment
       await placeOrderDoc("pending", { provider: "paytm" });
 
-      const isProduction = import.meta.env.VITE_PAYTM_ENVIRONMENT === "production";
-      const host = isProduction ? "securegw.paytm.in" : "securegw-stage.paytm.in";
+      const host = "securegw.paytm.in";
       
       const ok = await loadScript(`https://${host}/merchantpgpui/checkoutjs/merchants/${data.mid}.js`);
       if (!ok) {

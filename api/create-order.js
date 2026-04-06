@@ -21,12 +21,9 @@ export default async function handler(req, res) {
     const orderId = "ORD" + Date.now();
     const formattedAmount = parseFloat(amount).toFixed(2);
 
-    const isProduction = process.env.PAYTM_ENVIRONMENT === "production";
-    const host = isProduction ? "securegw.paytm.in" : "securegw-stage.paytm.in";
-    const websiteName = isProduction ? "DEFAULT" : "WEBSTAGING";
-    const callbackUrl = isProduction
-      ? "https://www.leafburst.in/api/paytm-callback"
-      : "http://localhost:5173/api/paytm-callback"; // Or your local callback
+    const host = "securegw.paytm.in";
+    const websiteName = "DEFAULT";
+    const callbackUrl = "https://www.leafburst.in/api/paytm-callback";
 
     const paytmParams = {
       body: {

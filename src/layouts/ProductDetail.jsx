@@ -79,8 +79,7 @@ const ProductDetail = () => {
     
     const merchantId = "YTxVaZ24286063946762";
 
-    const isProduction = import.meta.env.VITE_PAYTM_ENVIRONMENT === "production";
-    const host = isProduction ? "securegw.paytm.in" : "securegw-stage.paytm.in";
+    const host = "securegw.paytm.in";
 
     const ok = await loadScript(`https://${host}/merchantpgpui/checkoutjs/merchants/${merchantId}.js`);
     if (!ok) return;
