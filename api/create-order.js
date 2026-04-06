@@ -10,10 +10,7 @@ export default async function handler(req, res) {
   try {
     const mid = (process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762").trim();
     const mkey = (process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k").trim();
-    
-    // Website name from your dashboard screenshot
     const website = (process.env.PAYTM_WEBSITE || "DEFAULT").trim(); 
-    // Merchant ID looks like a production ID
     const environment = (process.env.PAYTM_ENVIRONMENT || "production").trim(); 
 
     const { amount, notes = {} } = req.body || {};
@@ -24,15 +21,13 @@ export default async function handler(req, res) {
     }
 
     // 2. Generate Unique IDs
-    // Order ID must be unique. LB prefix + timestamp
     const receipt = `LB${Date.now()}`;
-    // Customer ID: simple alphanumeric
     const customerId = notes.userId ? notes.userId.replace(/[^a-zA-Z0-9]/g, "") : `CUST${Date.now()}`;
 
-    // 3. Format Amount to 2 decimal places as a string
+    // 3. Format Amount strictly
     const formattedAmount = Number(amount).toFixed(2);
 
-    // 4. Prepare Paytm Request Body
+    // 4. Prepare Paytm Request Body (STRICT FORMAT)
     const paytmParams = {
       body: {
         requestType: "Payment",
@@ -47,13 +42,13 @@ export default async function handler(req, res) {
         userInfo: {
           custId: customerId,
         },
+        // IndustryType and ChannelId are often REQUIRED for production accounts
+        industryTypeId: "Retail",
+        channelId: "WEB",
       },
     };
 
-    // Note: IndustryType and ChannelId are often NOT needed in initiateTransaction body v1
-    // but if 501 persists, they can be added to the body or head.
-
-    // 5. Generate Checksum
+    // 5. Generate Checksum from EXACT body
     const bodyString = JSON.stringify(paytmParams.body);
     const checksum = await PaytmChecksum.generateSignature(bodyString, mkey);
     
@@ -65,7 +60,7 @@ export default async function handler(req, res) {
     const host = environment === "production" ? "securegw.paytm.in" : "securegw-stage.paytm.in";
     const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${receipt}`;
 
-    console.log("Paytm Request Payload:", JSON.stringify(paytmParams));
+    console.log("Paytm FULL Request Payload:", JSON.stringify(paytmParams, null, 2));
 
     const response = await axios.post(url, paytmParams, {
       headers: { 
@@ -74,7 +69,7 @@ export default async function handler(req, res) {
       },
     });
 
-    console.log("Paytm API Response:", JSON.stringify(response.data));
+    console.log("Paytm API Full Response:", JSON.stringify(response.data, null, 2));
 
     const resultInfo = response.data?.body?.resultInfo;
 
@@ -97,7 +92,8 @@ export default async function handler(req, res) {
     console.error("Critical Error in create-order:", e.response?.data || e.message);
     res.status(500).json({ 
       error: "Internal Server Error", 
-      details: e.response?.data || e.message 
+      details: e.response?.data || e.message,
+      stack: e.stack
     });
   }
 }
