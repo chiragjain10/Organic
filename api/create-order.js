@@ -11,18 +11,19 @@ export default async function handler(req, res) {
     const mid = (process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762").trim();
     const mkey = (process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k").trim();
     
-    // Strictly PRODUCTION for leafburst.in
     const website = "DEFAULT"; 
     const environment = "production"; 
 
-    const { amount, receipt = `ORD${Date.now()}` } = req.body || {};
+    const { amount } = req.body || {};
+    // Generate a shorter, unique Order ID (e.g., LB1712345678)
+    const receipt = `LB${Math.floor(Date.now() / 1000)}`;
 
     if (!amount || parseFloat(amount) <= 0) {
       res.status(400).json({ error: "Invalid amount" });
       return;
     }
 
-    const formattedAmount = Number(amount).toFixed(2).toString();
+    const formattedAmount = Number(amount).toFixed(2);
 
     const paytmParams = {
       body: {
@@ -36,14 +37,12 @@ export default async function handler(req, res) {
           currency: "INR",
         },
         userInfo: {
-          custId: "CUST" + Math.floor(Math.random() * 1000000),
+          custId: "CUST_" + Math.floor(Math.random() * 1000000),
         },
+        industryTypeId: "Retail",
+        channelId: "WEB",
       },
     };
-    
-    // Production requirements
-    paytmParams.body.industryTypeId = "Retail";
-    paytmParams.body.channelId = "WEB";
 
     const checksum = await PaytmChecksum.generateSignature(JSON.stringify(paytmParams.body), mkey);
     paytmParams.head = {
