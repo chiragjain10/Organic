@@ -93,12 +93,18 @@ export default function Checkout() {
 
       const html = await response.text();
       
-      // Force direct form submission from HTML response
+      // Clear any existing payment forms
+      const oldForm = document.getElementById("paytm-form-container");
+      if (oldForm) oldForm.remove();
+
+      // Create a hidden container for the form
       const div = document.createElement("div");
+      div.id = "paytm-form-container";
+      div.style.display = "none";
       div.innerHTML = html;
       document.body.appendChild(div);
       
-      // Find the form and submit it
+      // Find the form and submit it immediately
       const form = div.querySelector("form");
       if (form) {
         form.submit();
