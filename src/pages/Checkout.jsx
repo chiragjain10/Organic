@@ -70,71 +70,91 @@ export default function Checkout() {
   };
 
   const payWithPaytm = async () => {
+    // 1. Validation before API call
+    if (!address.firstName || !address.lastName || !address.line1 || !address.city || !address.zip || !address.state) {
+      alert("Please fill all shipping address fields.");
+      return;
+    }
+
     const environment = import.meta.env.VITE_PAYTM_ENVIRONMENT || "production";
     const merchantId = import.meta.env.VITE_PAYTM_MERCHANT_ID || "YTxVaZ24286063946762";
     
-    if (!merchantId) { alert("Paytm merchant ID missing"); return; }
+    if (!merchantId) { 
+      alert("System Configuration Error: Merchant ID missing."); 
+      return; 
+    }
     
+    setLoading(true);
     const host = environment === "production" ? "securegw.paytm.in" : "securegw-stage.paytm.in";
-    const ok = await loadScript(`https://${host}/merchantpgpui/checkoutjs/merchants/${merchantId}.js`);
+    const sdkUrl = `https://${host}/merchantpgpui/checkoutjs/merchants/${merchantId}.js`;
+
+    const ok = await loadScript(sdkUrl);
     if (!ok) {
-      alert("Failed to load Paytm SDK. Please check your internet connection.");
+      setLoading(false);
+      alert("Failed to load Paytm SDK. Please check your internet connection and disable any ad-blockers.");
       return;
     }
     
-    let order;
-    setLoading(true);
+    let orderData;
     try {
       const resp = await fetch("/api/create-order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify({
-          amount: String(total),
+          amount: total.toFixed(2),
           currency: "INR",
-          notes: { userId: user.uid, name: `${address.firstName} ${address.lastName}` },
+          notes: { 
+            userId: user.uid, 
+            name: `${address.firstName} ${address.lastName}`,
+            email: user.email 
+          },
         }),
       });
 
+      const responseText = await resp.text();
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (e) {
+        console.error("Malformed JSON response:", responseText);
+        throw new Error("Server returned an invalid response format.");
+      }
+
       if (!resp.ok) {
-        const text = await resp.text();
-        console.error("Server Error Response:", text);
-        throw new Error(`Server returned ${resp.status}: ${text.slice(0, 100)}`);
+        console.error("Checkout API Error:", result);
+        throw new Error(result.error || `Server Error: ${resp.status}`);
       }
 
-      const contentType = resp.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await resp.text();
-        console.error("Non-JSON Response:", text);
-        throw new Error(`Invalid response from server (not JSON): ${text.slice(0, 100)}`);
+      orderData = result;
+      if (!orderData || !orderData.txnToken) {
+        throw new Error("Failed to retrieve transaction token.");
       }
-
-      order = await resp.json();
-      if (!order || !order.txnToken) throw new Error(order?.error || "Order creation failed");
     } catch (err) {
-      alert("Error initiating payment: " + err.message);
-      console.error("Checkout Error:", err);
-      order = null;
-    } finally {
+      console.error("Initiate Payment Error:", err);
+      alert(`Payment Initiation Failed: ${err.message}`);
       setLoading(false);
+      return;
     }
     
-    if (!order) return;
-
+    // 2. Invoke Paytm Checkout JS
     const config = {
       "root": "",
       "flow": "DEFAULT",
       "data": {
-        "orderId": order.orderId,
-        "token": order.txnToken,
+        "orderId": orderData.orderId,
+        "token": orderData.txnToken,
         "tokenType": "TXN_TOKEN",
-        "amount": String(total)
+        "amount": orderData.amount
       },
       "handler": {
         "notifyMerchant": function(eventName, data) {
-          console.log("notifyMerchant handler function called", eventName, data);
+          console.log("Paytm Notify:", eventName, data);
         },
         "transactionStatus": async function(data) {
-          console.log("transaction status: ", data);
+          console.log("Paytm Transaction Status:", data);
           window.Paytm.CheckoutJS.close();
           
           if (data.STATUS === "TXN_SUCCESS") {
@@ -142,19 +162,20 @@ export default function Checkout() {
             try {
               const oid = await placeOrderDoc("paid", { 
                 provider: "paytm", 
-                orderId: order.orderId, 
+                orderId: orderData.orderId, 
                 paymentId: data.TXNID || data.BANKTXNID,
                 response: data
               });
               navigate("/orders?status=success&id=" + oid);
             } catch (err) {
-              console.error("Failed to save order:", err);
+              console.error("Order Save Error:", err);
+              alert("Payment successful, but failed to save order record. Please contact support.");
               navigate("/orders?status=error");
             } finally {
               setLoading(false);
             }
           } else {
-            alert("Payment failed: " + (data.RESPMSG || "Unknown error"));
+            alert(`Payment Failed: ${data.RESPMSG || "The transaction was not successful."}`);
           }
         }
       }
@@ -162,11 +183,16 @@ export default function Checkout() {
 
     if (window.Paytm && window.Paytm.CheckoutJS) {
       window.Paytm.CheckoutJS.init(config).then(function onSuccess() {
+        setLoading(false);
         window.Paytm.CheckoutJS.invoke();
       }).catch(function onError(error) {
-        console.error("Paytm init error:", error);
-        alert("Could not open payment window.");
+        console.error("Paytm Init Error:", error);
+        setLoading(false);
+        alert("Could not launch payment window. Please try again.");
       });
+    } else {
+      setLoading(false);
+      alert("Paytm SDK not available. Please refresh and try again.");
     }
   };
 
