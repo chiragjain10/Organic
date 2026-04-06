@@ -95,99 +95,48 @@ export default function Checkout() {
   const payWithPaytm = async () => {
     if (!validateForm()) return;
 
-    // 1. STAGING CONFIGURATION
-    const mid = "YTxVaZ24286063946762";
-    const host = "securegw-stage.paytm.in";
-    
     setLoading(true);
-
-    // 2. LOAD STAGING SDK SCRIPT
-    const sdkUrl = `https://${host}/merchantpgpui/checkoutjs/merchants/${mid}.js`;
-    const ok = await loadScript(sdkUrl);
-    if (!ok) {
-      setLoading(false);
-      alert("Failed to load Paytm SDK. Please disable ad-blockers and check your connection.");
-      return;
-    }
-
     try {
-      // 3. CALL BACKEND TO INITIATE TRANSACTION
-      console.log("Initiating Paytm Staging transaction...");
+      // 1. Call Backend to Create Payment Link
       const resp = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: total.toFixed(2),
           userId: user.uid,
+          email: user.email,
+          phone: "" // Add phone if available in your user object
         }),
       });
 
-      const orderData = await resp.json();
-      console.log("BACKEND API RESPONSE:", orderData);
-
-      if (!resp.ok || !orderData.txnToken) {
-        throw new Error(orderData.error || "Failed to initiate payment. Check server logs.");
+      const data = await resp.json();
+      if (!resp.ok || !data.shortUrl) {
+        throw new Error(data.error || "Failed to generate payment link");
       }
 
-      // 4. CONFIGURE CHECKOUT JS
-      const config = {
-        "root": "",
-        "flow": "DEFAULT",
-        "data": {
-          "orderId": orderData.orderId,
-          "token": orderData.txnToken,
-          "tokenType": "TXN_TOKEN",
-          "amount": orderData.amount
-        },
-        "handler": {
-          "transactionStatus": async function(data) {
-            console.log("PAYTM SDK TRANSACTION STATUS:", data);
-            window.Paytm.CheckoutJS.close();
-            
-            if (data.STATUS === "TXN_SUCCESS") {
-              setLoading(true);
-              try {
-                // Save order to Firestore only after verified success
-                const oid = await placeOrderDoc("paid", { 
-                  provider: "paytm", 
-                  orderId: orderData.orderId, 
-                  paymentId: data.TXNID || data.BANKTXNID,
-                  response: data
-                });
-                console.log("Order saved successfully:", oid);
-                navigate("/orders?status=success&id=" + oid);
-              } catch (err) {
-                console.error("Firestore Save Error:", err);
-                alert("Payment successful but failed to save order record. Please contact support.");
-                navigate("/orders?status=error");
-              } finally {
-                setLoading(false);
-              }
-            } else {
-              console.warn("Transaction failed or was cancelled:", data.RESPMSG);
-              alert(`Transaction Failed: ${data.RESPMSG || "Not successful"}`);
-              setLoading(false);
-            }
-          },
-          "notifyMerchant": function(eventName, data) {
-            console.log("PAYTM SDK NOTIFY:", eventName, data);
-          }
-        }
+      // 2. Save Pending Order to Session Storage (to recover after redirect)
+      const pendingOrder = {
+        userId: user.uid,
+        customerEmail: user.email,
+        customerName: `${address.firstName} ${address.lastName}`,
+        items,
+        address,
+        shipping,
+        subtotal,
+        shippingFee,
+        total,
+        orderId: data.orderId,
+        status: "pending_payment",
+        createdAt: new Date().toISOString()
       };
+      sessionStorage.setItem("pending_order", JSON.stringify(pendingOrder));
 
-      // 5. INVOKE PAYTM CHECKOUT
-      if (window.Paytm && window.Paytm.CheckoutJS) {
-        window.Paytm.CheckoutJS.init(config).then(function() {
-          setLoading(false);
-          window.Paytm.CheckoutJS.invoke();
-        }).catch(function(err) {
-          console.error("Paytm CheckoutJS init failed:", err);
-          setLoading(false);
-          alert("Could not open the payment window. See console for details.");
-        });
-      }
+      // 3. Redirect to Paytm Payment Link
+      console.log("Redirecting to Paytm:", data.shortUrl);
+      window.location.href = data.shortUrl;
+
     } catch (error) {
-      console.error("PAYTM INTEGRATION ERROR:", error);
+      console.error("Payment Error:", error);
       alert("Order Error: " + error.message);
       setLoading(false);
     }
