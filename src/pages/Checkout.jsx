@@ -201,21 +201,6 @@ export default function Checkout() {
     navigate("/orders");
   };
 
-  const testPaytm = async () => {
-    setLoading(true);
-    try {
-      const resp = await fetch("/api/test-paytm");
-      const result = await resp.json();
-      console.log("Paytm Test Result:", result);
-      alert(`Paytm Test Result: ${JSON.stringify(result, null, 2)}`);
-    } catch (err) {
-      console.error("Test Error:", err);
-      alert("Test failed. Check console.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (loading) return <div className="min-h-screen bg-[#F7F6F2] flex items-center justify-center">Loading…</div>;
 
   return (
@@ -263,22 +248,13 @@ export default function Checkout() {
           {/* Step 4: Review */}
           <div className="bg-white rounded-2xl border border-[#1E3D2B]/10 p-6">
             <h3 className="text-xl font-black text-[#1E3D2B] mb-4">Review & place order</h3>
-            <div className="space-y-4">
-              <button
-                disabled={items.length===0}
-                onClick={payment==="paytm" ? payWithPaytm : placeCodOrder}
-                className="px-8 py-4 rounded-2xl bg-[#1E3D2B] text-white font-black w-full"
-              >
-                {payment==="paytm" ? "Pay with Paytm" : "Place COD Order"}
-              </button>
-              
-              <button
-                onClick={testPaytm}
-                className="px-8 py-2 rounded-xl bg-gray-200 text-gray-700 font-bold w-full text-xs"
-              >
-                Debug: Test Paytm Integration
-              </button>
-            </div>
+            <button
+              disabled={items.length===0}
+              onClick={payment==="paytm" ? payWithPaytm : placeCodOrder}
+              className="px-8 py-4 rounded-2xl bg-[#1E3D2B] text-white font-black w-full"
+            >
+              {payment==="paytm" ? "Pay with Paytm" : "Place COD Order"}
+            </button>
             <div className="mt-8 pt-6 border-t border-[#1E3D2B]/5 space-y-4">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-[#1E3D2B] mb-1">Intellectual Property Rights</p>
