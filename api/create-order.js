@@ -92,7 +92,7 @@ export default async function handler(req, res) {
       res.status(400).json({ 
         error: resultInfo?.resultMsg || "Paytm initiation failed", 
         details: resultInfo,
-        sent_body: paytmParams.body 
+        sent_body: paytmBody 
       });
     }
   } catch (e) {
