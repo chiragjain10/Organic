@@ -13,12 +13,15 @@ export default async function handler(req, res) {
     const website = process.env.PAYTM_WEBSITE || "WEBSTAGING"; // Use "DEFAULT" for production
     const environment = process.env.PAYTM_ENVIRONMENT || "staging"; // "staging" or "production"
 
-    const { amount, currency = "INR", receipt = `ORDR_${Date.now()}`, notes = {} } = req.body || {};
+    const { amount, currency = "INR", receipt = `ORDR${Date.now()}`, notes = {} } = req.body || {};
 
-    if (!amount || amount <= 0) {
+    if (!amount || parseFloat(amount) <= 0) {
       res.status(400).json({ error: "Invalid amount" });
       return;
     }
+
+    // Ensure amount is string with 2 decimal places
+    const formattedAmount = parseFloat(amount).toFixed(2);
 
     const paytmParams = {
       body: {
@@ -26,13 +29,13 @@ export default async function handler(req, res) {
         mid: mid,
         websiteName: website,
         orderId: receipt,
-        callbackUrl: `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"}/api/paytm-callback`,
+        callbackUrl: `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://leafburst.in"}/api/paytm-callback`,
         txnAmount: {
-          value: amount,
+          value: formattedAmount,
           currency: currency,
         },
         userInfo: {
-          custId: notes.userId || "CUST_" + Date.now(),
+          custId: notes.userId ? notes.userId.replace(/[^a-zA-Z0-9]/g, "") : "CUST" + Date.now(),
         },
       },
     };
