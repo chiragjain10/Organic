@@ -11,9 +11,9 @@ export default async function handler(req, res) {
     const mid = (process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762").trim();
     const mkey = (process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k").trim();
     
-    // Most staging accounts need WEBSTAGING and Retail
-    const website = process.env.PAYTM_WEBSITE || "WEBSTAGING"; 
-    const environment = process.env.PAYTM_ENVIRONMENT || "staging"; 
+    // Strictly PRODUCTION for leafburst.in
+    const website = "DEFAULT"; 
+    const environment = "production"; 
 
     const { amount, receipt = `ORD${Date.now()}` } = req.body || {};
 
@@ -36,14 +36,14 @@ export default async function handler(req, res) {
           currency: "INR",
         },
         userInfo: {
-          custId: "CUST001", // Very simple ID to rule out character issues
+          custId: "CUST" + Math.floor(Math.random() * 1000000),
         },
       },
     };
     
-    // Some accounts require these even in v1 initiateTransaction
-    // paytmParams.body.industryTypeId = "Retail";
-    // paytmParams.body.channelId = "WEB";
+    // Production requirements
+    paytmParams.body.industryTypeId = "Retail";
+    paytmParams.body.channelId = "WEB";
 
     const checksum = await PaytmChecksum.generateSignature(JSON.stringify(paytmParams.body), mkey);
     paytmParams.head = {

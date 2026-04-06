@@ -70,7 +70,7 @@ export default function Checkout() {
   };
 
   const payWithPaytm = async () => {
-    const environment = import.meta.env.VITE_PAYTM_ENVIRONMENT || "staging";
+    const environment = import.meta.env.VITE_PAYTM_ENVIRONMENT || "production";
     const merchantId = import.meta.env.VITE_PAYTM_MERCHANT_ID || "YTxVaZ24286063946762";
     
     if (!merchantId) { alert("Paytm merchant ID missing"); return; }
