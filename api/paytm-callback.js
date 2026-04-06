@@ -2,7 +2,6 @@ import PaytmChecksum from "paytmchecksum";
 import { parse } from "querystring";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
-import * as functions from "firebase-functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDzZTUGI3a0GaTCapMmC_I4wX3wSRNtZjI",
@@ -22,14 +21,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    let mid, mkey;
-    try {
-      mid = functions.config().paytm.mid;
-      mkey = functions.config().paytm.key;
-    } catch (e) {
-      // Fallback for local Vercel dev if functions config isn't available
-      mkey = "s1T8@d5rDD&a%g7k";
-      mid = "YTxVaZ24286063946762";
+    let mid = process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762";
+    let mkey = process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k";
+    
+    // Optional: Firebase functions config check if running in Firebase Cloud Functions natively
+    if (process.env.FUNCTIONS_EMULATOR || process.env.GCLOUD_PROJECT) {
+      try {
+        const functions = require("firebase-functions");
+        if (functions.config().paytm) {
+          mid = functions.config().paytm.mid || mid;
+          mkey = functions.config().paytm.key || mkey;
+        }
+      } catch (e) {
+        // Ignore require error if firebase-functions isn't available
+      }
     }
     
     console.log("MID:", mid); // Temporary debug log
