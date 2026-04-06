@@ -1,39 +1,50 @@
 import PaytmChecksum from "paytmchecksum";
+import { parse } from "querystring";
 
 export default async function handler(req, res) {
-  // Paytm sends POST callback
+  // Paytm sends a POST request with form-urlencoded body
   if (req.method !== "POST") {
     return res.status(405).send("Method Not Allowed");
   }
 
-  const mid = process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762";
-  const mkey = process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k";
-  
-  const body = req.body || {};
-  if (!body || Object.keys(body).length === 0) {
-    // Some environments need to parse the body manually if not using a body-parser
-    // But for Vercel/Node standard, it should be in req.body
-    return res.status(400).send("Empty response from Paytm");
-  }
+  try {
+    const mid = "YTxVaZ24286063946762";
+    const mkey = "s1T8@d5rDD&a%g7k";
 
-  const paytmChecksum = body.CHECKSUMHASH;
-  delete body.CHECKSUMHASH;
+    // Manually parse the body because Vercel doesn't always parse form-urlencoded automatically
+    let rawBody = "";
+    await new Promise((resolve) => {
+      req.on("data", (chunk) => {
+        rawBody += chunk.toString();
+      });
+      req.on("end", resolve);
+    });
 
-  const isVerifySignature = PaytmChecksum.verifySignature(body, mkey, paytmChecksum);
-  
-  const status = body.STATUS;
-  const orderId = body.ORDERID;
-  const bankTxnId = body.BANKTXNID || "";
-  const txnId = body.TXNID || "";
+    const body = parse(rawBody);
 
-  console.log("Paytm Callback Data:", JSON.stringify(body));
+    if (!body || Object.keys(body).length === 0) {
+      return res.status(400).send("No callback data received from Paytm");
+    }
 
-  // The redirect URL should be your frontend order confirmation page
-  const redirectUrl = `https://leafburst.in/orders?orderId=${orderId}&status=${status}&txnId=${txnId}`;
+    const paytmChecksum = body.CHECKSUMHASH;
+    delete body.CHECKSUMHASH;
 
-  if (isVerifySignature) {
-    res.redirect(302, redirectUrl);
-  } else {
-    res.redirect(302, `${redirectUrl}&error=checksum_mismatch`);
+    const isVerifySignature = PaytmChecksum.verifySignature(body, mkey, paytmChecksum);
+    
+    const status = body.STATUS;
+    const orderId = body.ORDERID;
+    const txnId = body.TXNID || "";
+
+    console.log("Paytm Status:", status, "OrderID:", orderId);
+
+    // Redirect back to the frontend orders page with status
+    const redirectUrl = `https://leafburst.in/orders?orderId=${orderId}&status=${status}&txnId=${txnId}`;
+    
+    res.setHeader("Location", redirectUrl);
+    res.status(302).send("");
+
+  } catch (error) {
+    console.error("Callback Crash:", error);
+    res.status(500).send("Callback processing failed");
   }
 }
