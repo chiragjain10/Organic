@@ -95,35 +95,41 @@ export default function Checkout() {
   const payWithPaytm = async () => {
     if (!validateForm()) return;
 
+    // 1. STAGING CONFIGURATION
     const mid = "YTxVaZ24286063946762";
-    const environment = "production";
-    const host = environment === "production" ? "securegw.paytm.in" : "securegw-stage.paytm.in";
+    const host = "securegw-stage.paytm.in";
+    const environment = "staging"; 
     
     setLoading(true);
 
-    const ok = await loadScript(`https://${host}/merchantpgpui/checkoutjs/merchants/${mid}.js`);
+    // 2. LOAD STAGING SDK
+    const sdkUrl = `https://${host}/merchantpgpui/checkoutjs/merchants/${mid}.js`;
+    const ok = await loadScript(sdkUrl);
     if (!ok) {
       setLoading(false);
-      alert("Failed to load Paytm SDK. Please disable ad-blockers.");
+      alert("Failed to load Paytm SDK. Please disable ad-blockers and check your connection.");
       return;
     }
 
     try {
+      // 3. CALL BACKEND TO GET TXN TOKEN
       const resp = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: total.toFixed(2),
           userId: user.uid,
-          items: items,
-          address: address,
-          shipping: shipping
         }),
       });
 
       const orderData = await resp.json();
-      if (!resp.ok || !orderData.txnToken) throw new Error(orderData.error || "Failed to initiate payment");
+      console.log("BACKEND RESPONSE:", orderData);
 
+      if (!resp.ok || !orderData.txnToken) {
+        throw new Error(orderData.error || "Failed to initiate payment");
+      }
+
+      // 4. INITIALIZE CHECKOUT JS
       const config = {
         "root": "",
         "flow": "DEFAULT",
@@ -135,7 +141,7 @@ export default function Checkout() {
         },
         "handler": {
           "transactionStatus": async function(data) {
-            console.log("Paytm Status:", data);
+            console.log("PAYTM STATUS HANDLER:", data);
             window.Paytm.CheckoutJS.close();
             
             if (data.STATUS === "TXN_SUCCESS") {
@@ -155,12 +161,12 @@ export default function Checkout() {
                 setLoading(false);
               }
             } else {
-              alert(`Payment Failed: ${data.RESPMSG || "Unknown error"}`);
+              alert(`Payment Failed: ${data.RESPMSG || "Transaction was not successful"}`);
               setLoading(false);
             }
           },
           "notifyMerchant": function(eventName, data) {
-            console.log("Notify:", eventName, data);
+            console.log("PAYTM NOTIFY:", eventName, data);
           }
         }
       };
@@ -170,12 +176,13 @@ export default function Checkout() {
           setLoading(false);
           window.Paytm.CheckoutJS.invoke();
         }).catch(function(err) {
-          console.error("Paytm Init Error:", err);
+          console.error("Paytm JS Init Error:", err);
           setLoading(false);
+          alert("Payment window failed to open. Check console.");
         });
       }
     } catch (error) {
-      console.error("Payment Error:", error);
+      console.error("PAYTM FRONTEND ERROR:", error);
       alert("Error: " + error.message);
       setLoading(false);
     }

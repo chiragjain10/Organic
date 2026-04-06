@@ -7,25 +7,28 @@ export default async function handler(req, res) {
   }
 
   try {
+    // 1. STAGING CONFIGURATION
     const mid = (process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762").trim();
     const mkey = (process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k").trim();
-    const website = (process.env.PAYTM_WEBSITE || "DEFAULT").trim();
-    const environment = (process.env.PAYTM_ENVIRONMENT || "production").trim();
+    const websiteName = "WEBSTAGING";
+    const host = "securegw-stage.paytm.in";
 
-    const { amount, userId, items, address, shipping } = req.body;
+    const { amount, userId } = req.body;
 
-    if (!amount || !userId || !items) {
-      return res.status(400).json({ error: "Missing required fields" });
+    if (!amount || !userId) {
+      return res.status(400).json({ error: "Missing required fields: amount and userId" });
     }
 
-    const orderId = `ORDR${Date.now()}`;
+    // 2. PREPARE PAYLOAD (STRICT FORMAT)
+    const orderId = "ORD" + Date.now();
     const formattedAmount = parseFloat(amount).toFixed(2);
+    const custId = userId.replace(/[^a-zA-Z0-9]/g, "");
 
     const paytmParams = {
       body: {
         requestType: "Payment",
         mid: mid,
-        websiteName: website,
+        websiteName: websiteName,
         orderId: orderId,
         callbackUrl: `https://leafburst.in/api/paytm-callback`,
         txnAmount: {
@@ -33,26 +36,34 @@ export default async function handler(req, res) {
           currency: "INR",
         },
         userInfo: {
-          custId: userId.replace(/[^a-zA-Z0-9]/g, ""),
+          custId: custId,
         },
-        // Store order details in extendInfo or use a database to map orderId to details
-        // For standard Blink flow, we pass orderId and retrieve details in callback
       },
     };
 
-    const checksum = await PaytmChecksum.generateSignature(JSON.stringify(paytmParams.body), mkey);
+    // 3. GENERATE CHECKSUM
+    const bodyString = JSON.stringify(paytmParams.body);
+    const checksum = await PaytmChecksum.generateSignature(bodyString, mkey);
+    
     paytmParams.head = {
       signature: checksum,
+      version: "v1"
     };
 
-    const host = environment === "production" ? "securegw.paytm.in" : "securegw-stage.paytm.in";
+    // 4. CALL INITIATE TRANSACTION API
     const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`;
+
+    console.log("PAYTM STAGING REQUEST:", bodyString);
 
     const response = await axios.post(url, paytmParams, {
       headers: { "Content-Type": "application/json" },
     });
 
-    if (response.data?.body?.resultInfo?.resultStatus === "S") {
+    console.log("PAYTM STAGING RESPONSE:", JSON.stringify(response.data));
+
+    const resultInfo = response.data?.body?.resultInfo;
+
+    if (resultInfo?.resultStatus === "S") {
       res.status(200).json({
         txnToken: response.data.body.txnToken,
         orderId: orderId,
@@ -61,12 +72,15 @@ export default async function handler(req, res) {
       });
     } else {
       res.status(400).json({ 
-        error: response.data?.body?.resultInfo?.resultMsg || "Failed to initiate transaction",
-        details: response.data?.body?.resultInfo
+        error: resultInfo?.resultMsg || "System Error from Paytm", 
+        details: resultInfo 
       });
     }
   } catch (error) {
-    console.error("Paytm Init Error:", error.response?.data || error.message);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("PAYTM BACKEND CRASH:", error.response?.data || error.message);
+    res.status(500).json({ 
+      error: "Internal Server Error during order initiation", 
+      details: error.response?.data || error.message 
+    });
   }
 }
