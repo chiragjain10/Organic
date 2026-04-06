@@ -7,9 +7,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. STRICT STAGING CONFIGURATION
-    const mid = (process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762").trim();
-    const mkey = (process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k").trim();
+    // ✅ STAGING CONFIG
+    const mid = process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762";
+    const mkey = process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k"; // 🔐 MUST be in .env
     const websiteName = "WEBSTAGING";
     const host = "securegw-stage.paytm.in";
 
@@ -19,16 +19,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Valid amount is required" });
     }
 
-    // 2. PREPARE PAYLOAD (STRICT STAGING FORMAT)
+    // ✅ GENERATE VALUES
     const orderId = "ORD" + Date.now();
     const formattedAmount = parseFloat(amount).toFixed(2);
-    const custId = "CUST" + Date.now(); // Fixed: Generic unique ID instead of Firebase UID
+    const custId = "CUST" + Date.now();
 
-    // Callback must be localhost for staging/local dev as requested
-    const callbackUrl =  `https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=${orderId}`;
+    // ✅ STAGING CALLBACK (IMPORTANT)
+    const callbackUrl = `https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=${orderId}`;
 
-
-
+    // ✅ PAYLOAD
     const paytmParams = {
       body: {
         requestType: "Payment",
@@ -46,46 +45,51 @@ export default async function handler(req, res) {
       },
     };
 
-    // 3. GENERATE CHECKSUM
-    const bodyString = JSON.stringify(paytmParams.body);
-    const checksum = await PaytmChecksum.generateSignature(bodyString, mkey);
-    
+    // ✅ CHECKSUM
+    const checksum = await PaytmChecksum.generateSignature(
+      JSON.stringify(paytmParams.body),
+      mkey
+    );
+
     paytmParams.head = {
-      signature: checksum,
-      version: "v1"
+      signature: checksum, // ❌ NO version here
     };
 
-    // 4. CALL INITIATE TRANSACTION API
+    // ✅ API URL
     const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`;
 
-    console.log("PAYTM STAGING REQUEST:", JSON.stringify(paytmParams));
+    console.log("PAYTM REQUEST:", JSON.stringify(paytmParams, null, 2));
 
     const response = await axios.post(url, paytmParams, {
       headers: { "Content-Type": "application/json" },
     });
 
-    console.log("PAYTM STAGING RESPONSE:", JSON.stringify(response.data));
+    console.log("PAYTM RESPONSE:", JSON.stringify(response.data, null, 2));
 
     const resultInfo = response.data?.body?.resultInfo;
 
+    // ✅ SUCCESS
     if (resultInfo?.resultStatus === "S") {
-      res.status(200).json({
+      return res.status(200).json({
         txnToken: response.data.body.txnToken,
         orderId: orderId,
         mid: mid,
-        amount: formattedAmount
-      });
-    } else {
-      res.status(400).json({ 
-        error: resultInfo?.resultMsg || "System Error from Paytm", 
-        details: resultInfo 
+        amount: formattedAmount,
       });
     }
+
+    // ❌ FAILURE
+    return res.status(400).json({
+      error: resultInfo?.resultMsg || "Paytm Error",
+      details: resultInfo,
+    });
+
   } catch (error) {
-    console.error("PAYTM BACKEND CRASH:", error.response?.data || error.message);
-    res.status(500).json({ 
-      error: "Internal Server Error during order initiation", 
-      details: error.response?.data || error.message 
+    console.error("PAYTM ERROR:", error.response?.data || error.message);
+
+    return res.status(500).json({
+      error: "Internal Server Error",
+      details: error.response?.data || error.message,
     });
   }
 }
