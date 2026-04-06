@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     const mid = "YTxVaZ24286063946762";
     const mkey = "s1T8@d5rDD&a%g7k";
     const website = "DEFAULT";
-    const environment = "production"; // Since it's leafburst.in
+    const environment = "production"; 
 
     const { amount, userId } = req.body;
 

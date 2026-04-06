@@ -93,7 +93,7 @@ export default function Checkout() {
 
       const html = await response.text();
       
-      // Create a temporary container to hold the form
+      // Force direct form submission from HTML response
       const div = document.createElement("div");
       div.innerHTML = html;
       document.body.appendChild(div);
