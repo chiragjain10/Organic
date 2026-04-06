@@ -25,7 +25,9 @@ export default async function handler(req, res) {
     const custId = "CUST" + Date.now(); // Fixed: Generic unique ID instead of Firebase UID
 
     // Callback must be localhost for staging/local dev as requested
-    const callbackUrl = "http://localhost:3000/api/paytm-callback";
+    const callbackUrl =  `https://securegw-stage.paytm.in/theia/paytmCallback?ORDER_ID=${orderId}`;
+
+
 
     const paytmParams = {
       body: {
