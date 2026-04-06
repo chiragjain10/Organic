@@ -11,10 +11,9 @@ export default async function handler(req, res) {
     const mid = (process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762").trim();
     const mkey = (process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k").trim();
     
-    // For many newer accounts, even staging uses "DEFAULT". 
-    // Try "DEFAULT" if "WEBSTAGING" continues to give 501.
-    const website = process.env.PAYTM_WEBSITE || "WEBSTAGING"; 
-    const environment = process.env.PAYTM_ENVIRONMENT || "staging"; 
+    // Switch to "production" and "DEFAULT" for the live credentials provided
+    const website = process.env.PAYTM_WEBSITE || "DEFAULT"; 
+    const environment = process.env.PAYTM_ENVIRONMENT || "production"; 
 
     const { amount, currency = "INR", receipt = `ORDR${Date.now()}`, notes = {} } = req.body || {};
 
@@ -31,13 +30,13 @@ export default async function handler(req, res) {
         mid: mid,
         websiteName: website,
         orderId: receipt,
-        callbackUrl: `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://leafburst.in"}/api/paytm-callback`,
+        callbackUrl: `https://leafburst.in/api/paytm-callback`,
         txnAmount: {
           value: formattedAmount,
           currency: currency,
         },
         userInfo: {
-          custId: notes.userId ? notes.userId.replace(/[^a-zA-Z0-9]/g, "") : "CUST" + Date.now(),
+          custId: (notes.userId || "CUST" + Date.now()).replace(/[^a-zA-Z0-9]/g, ""),
         },
       },
     };
