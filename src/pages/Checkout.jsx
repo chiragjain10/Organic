@@ -234,10 +234,18 @@ export default function Checkout() {
           <div className="bg-white rounded-2xl border border-[#1E3D2B]/10 p-6">
             <h3 className="text-xl font-black text-[#1E3D2B] mb-4">Payment method</h3>
             <div className="space-y-3">
-              <label className="flex items-center gap-3 p-3 border rounded-xl cursor-pointer bg-gray-50 border-[#1E3D2B]/20">
-                <input type="radio" name="pay" checked={payment === "cod"} readOnly className="accent-[#1E3D2B]" />
+              {/* Paytm Option */}
+              <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors ${payment === "paytm" ? "bg-gray-50 border-[#1E3D2B]/20" : "hover:bg-gray-50"}`}>
+                <input type="radio" name="pay" checked={payment === "paytm"} onChange={() => setPayment("paytm")} className="accent-[#1E3D2B]" />
+                <span className="flex-1 font-medium">Pay with Paytm (Secure Gateway)</span>
+                <span className="text-[10px] bg-[#1E3D2B] text-white px-2 py-1 rounded-full uppercase font-black">Safe</span>
+              </label>
+
+              {/* COD Option */}
+              <label className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-colors ${payment === "cod" ? "bg-gray-50 border-[#1E3D2B]/20" : "hover:bg-gray-50"}`}>
+                <input type="radio" name="pay" checked={payment === "cod"} onChange={() => setPayment("cod")} className="accent-[#1E3D2B]" />
                 <span className="flex-1 font-medium">Cash on Delivery (COD)</span>
-                <span className="text-[10px] bg-[#1E3D2B] text-white px-2 py-1 rounded-full uppercase font-black">Available</span>
+                <span className="text-[10px] border border-[#1E3D2B] text-[#1E3D2B] px-2 py-1 rounded-full uppercase font-black">Popular</span>
               </label>
               <p className="text-xs text-[#6B4F3F]/60 ml-8">Pay securely in cash or via UPI when your package arrives at your doorstep.</p>
             </div>
