@@ -125,7 +125,8 @@ export default function Checkout() {
 
       if (!resp.ok) {
         console.error("Checkout API Error:", result);
-        throw new Error(result.error || `Server Error: ${resp.status}`);
+        const detailedError = result.details ? ` (${result.details.resultCode}: ${result.details.resultMsg})` : "";
+        throw new Error(`${result.error}${detailedError}`);
       }
 
       orderData = result;

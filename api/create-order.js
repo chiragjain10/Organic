@@ -33,44 +33,46 @@ export default async function handler(req, res) {
     const formattedAmount = Number(amount).toFixed(2);
 
     // 4. Prepare Paytm Request Body
-    const paytmParams = {
-      body: {
-        requestType: "Payment",
-        mid: mid,
-        websiteName: website,
-        orderId: receipt,
-        callbackUrl: `https://leafburst.in/api/paytm-callback`,
-        txnAmount: {
-          value: formattedAmount,
-          currency: "INR",
-        },
-        userInfo: {
-          custId: customerId,
-        },
+    const paytmBody = {
+      requestType: "Payment",
+      mid: mid,
+      websiteName: website,
+      orderId: receipt,
+      callbackUrl: `https://leafburst.in/api/paytm-callback`,
+      txnAmount: {
+        value: formattedAmount,
+        currency: "INR",
       },
+      userInfo: {
+        custId: customerId,
+      },
+      industryTypeId: "Retail",
+      channelId: "WEB",
     };
 
-    // Note: IndustryType and ChannelId are often NOT needed in initiateTransaction body v1
-    // but if 501 persists, they can be added to the body or head.
-
     // 5. Generate Checksum
-    const bodyString = JSON.stringify(paytmParams.body);
+    // We stringify manually to ensure the signature matches the sent body exactly
+    const bodyString = JSON.stringify(paytmBody);
     const checksum = await PaytmChecksum.generateSignature(bodyString, mkey);
     
-    paytmParams.head = {
-      signature: checksum,
+    const paytmRequest = {
+      head: {
+        signature: checksum,
+        version: "v1"
+      },
+      body: paytmBody
     };
 
     // 6. Call Paytm API
     const host = environment === "production" ? "securegw.paytm.in" : "securegw-stage.paytm.in";
     const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${receipt}`;
 
-    console.log("Paytm Request Payload:", JSON.stringify(paytmParams));
+    console.log("Paytm Request:", bodyString);
 
-    const response = await axios.post(url, paytmParams, {
+    const response = await axios.post(url, JSON.stringify(paytmRequest), {
       headers: { 
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Content-Length": JSON.stringify(paytmRequest).length
       },
     });
 
