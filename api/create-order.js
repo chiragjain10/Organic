@@ -11,18 +11,19 @@ export default async function handler(req, res) {
     const mid = (process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762").trim();
     const mkey = (process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k").trim();
     
-    // Switch to "production" and "DEFAULT" for the live credentials provided
+    // Prioritize the website name from your .env
     const website = process.env.PAYTM_WEBSITE || "DEFAULT"; 
     const environment = process.env.PAYTM_ENVIRONMENT || "production"; 
 
-    const { amount, currency = "INR", receipt = `ORDR${Date.now()}`, notes = {} } = req.body || {};
+    const { amount, receipt = `ORD${Math.floor(Date.now() / 1000)}` } = req.body || {};
 
     if (!amount || parseFloat(amount) <= 0) {
       res.status(400).json({ error: "Invalid amount" });
       return;
     }
 
-    const formattedAmount = parseFloat(amount).toFixed(2);
+    // Paytm requires amount as a string with 2 decimal places (e.g. "1.00")
+    const formattedAmount = Number(amount).toFixed(2).toString();
 
     const paytmParams = {
       body: {
@@ -33,10 +34,10 @@ export default async function handler(req, res) {
         callbackUrl: `https://leafburst.in/api/paytm-callback`,
         txnAmount: {
           value: formattedAmount,
-          currency: currency,
+          currency: "INR",
         },
         userInfo: {
-          custId: (notes.userId || "CUST" + Date.now()).replace(/[^a-zA-Z0-9]/g, ""),
+          custId: "CUST" + Math.floor(Math.random() * 1000000),
         },
       },
     };
