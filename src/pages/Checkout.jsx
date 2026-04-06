@@ -98,7 +98,6 @@ export default function Checkout() {
     // 1. STAGING CONFIGURATION
     const mid = "YTxVaZ24286063946762";
     const host = "securegw-stage.paytm.in";
-    const environment = "staging"; 
     
     setLoading(true);
 
@@ -113,7 +112,7 @@ export default function Checkout() {
 
     try {
       // 3. CALL BACKEND TO INITIATE TRANSACTION
-      console.log("Initiating Paytm transaction for user:", user.uid);
+      console.log("Initiating Paytm Staging transaction...");
       const resp = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -142,36 +141,36 @@ export default function Checkout() {
         },
         "handler": {
           "transactionStatus": async function(data) {
-            console.log("PAYTM TRANSACTION STATUS RECEIVED:", data);
+            console.log("PAYTM SDK TRANSACTION STATUS:", data);
             window.Paytm.CheckoutJS.close();
             
             if (data.STATUS === "TXN_SUCCESS") {
               setLoading(true);
               try {
-                // Save order only after verified success
+                // Save order to Firestore only after verified success
                 const oid = await placeOrderDoc("paid", { 
                   provider: "paytm", 
                   orderId: orderData.orderId, 
                   paymentId: data.TXNID || data.BANKTXNID,
                   response: data
                 });
-                console.log("Order saved successfully in Firestore:", oid);
+                console.log("Order saved successfully:", oid);
                 navigate("/orders?status=success&id=" + oid);
               } catch (err) {
-                console.error("Firestore order save failed after successful payment:", err);
-                alert("Payment successful but order record failed to save. Please contact support.");
+                console.error("Firestore Save Error:", err);
+                alert("Payment successful but failed to save order record. Please contact support.");
                 navigate("/orders?status=error");
               } finally {
                 setLoading(false);
               }
             } else {
-              console.warn("Payment failed or cancelled:", data.RESPMSG);
-              alert(`Payment Failed: ${data.RESPMSG || "The transaction was not successful."}`);
+              console.warn("Transaction failed or was cancelled:", data.RESPMSG);
+              alert(`Transaction Failed: ${data.RESPMSG || "Not successful"}`);
               setLoading(false);
             }
           },
           "notifyMerchant": function(eventName, data) {
-            console.log("PAYTM SDK NOTIFICATION:", eventName, data);
+            console.log("PAYTM SDK NOTIFY:", eventName, data);
           }
         }
       };
@@ -182,14 +181,14 @@ export default function Checkout() {
           setLoading(false);
           window.Paytm.CheckoutJS.invoke();
         }).catch(function(err) {
-          console.error("Paytm CheckoutJS initialization failed:", err);
+          console.error("Paytm CheckoutJS init failed:", err);
           setLoading(false);
-          alert("Could not open the payment window. Check console for details.");
+          alert("Could not open the payment window. See console for details.");
         });
       }
     } catch (error) {
       console.error("PAYTM INTEGRATION ERROR:", error);
-      alert("Checkout Error: " + error.message);
+      alert("Order Error: " + error.message);
       setLoading(false);
     }
   };

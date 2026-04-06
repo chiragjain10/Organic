@@ -13,21 +13,19 @@ export default async function handler(req, res) {
     const websiteName = "WEBSTAGING";
     const host = "securegw-stage.paytm.in";
 
-    const { amount, userId } = req.body;
+    const { amount } = req.body;
 
-    if (!amount || !userId) {
-      return res.status(400).json({ error: "Missing required fields: amount and userId" });
+    if (!amount || isNaN(amount)) {
+      return res.status(400).json({ error: "Valid amount is required" });
     }
 
-    // 2. PREPARE PAYLOAD (STRICT FORMAT)
+    // 2. PREPARE PAYLOAD (STRICT STAGING FORMAT)
     const orderId = "ORD" + Date.now();
     const formattedAmount = parseFloat(amount).toFixed(2);
-    const custId = userId.replace(/[^a-zA-Z0-9]/g, "");
+    const custId = "CUST" + Date.now(); // Fixed: Generic unique ID instead of Firebase UID
 
-    // Use local callback for staging as requested
-    const callbackUrl = process.env.NODE_ENV === "production" 
-      ? `https://leafburst.in/api/paytm-callback` 
-      : `http://localhost:3000/api/paytm-callback`;
+    // Callback must be localhost for staging/local dev as requested
+    const callbackUrl = "http://localhost:3000/api/paytm-callback";
 
     const paytmParams = {
       body: {
@@ -58,7 +56,7 @@ export default async function handler(req, res) {
     // 4. CALL INITIATE TRANSACTION API
     const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`;
 
-    console.log("PAYTM STAGING REQUEST PAYLOAD:", bodyString);
+    console.log("PAYTM STAGING REQUEST:", JSON.stringify(paytmParams));
 
     const response = await axios.post(url, paytmParams, {
       headers: { "Content-Type": "application/json" },
@@ -78,8 +76,7 @@ export default async function handler(req, res) {
     } else {
       res.status(400).json({ 
         error: resultInfo?.resultMsg || "System Error from Paytm", 
-        details: resultInfo,
-        sent_body: paytmParams.body
+        details: resultInfo 
       });
     }
   } catch (error) {
