@@ -7,8 +7,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const mid = process.env.PAYTM_MERCHANT_ID;
-    const mkey = process.env.PAYTM_MERCHANT_KEY;
+    const mid = "YTxVaZ24286063946762";
+    const mkey = "s1T8@d5rDD&a%g7k";
+
+    console.log("MID:", mid); // Temporary debug log
 
     const { amount, email, phone } = req.body;
 
@@ -19,47 +21,55 @@ export default async function handler(req, res) {
     const orderId = "ORD" + Date.now();
     const formattedAmount = parseFloat(amount).toFixed(2);
 
-    // ✅ PAYMENT LINK PAYLOAD
+    const isProduction = process.env.PAYTM_ENVIRONMENT === "production";
+    const host = isProduction ? "securegw.paytm.in" : "securegw-stage.paytm.in";
+    const websiteName = isProduction ? "DEFAULT" : "WEBSTAGING";
+    const callbackUrl = isProduction
+      ? "https://www.leafburst.in/api/paytm-callback"
+      : "http://localhost:5173/api/paytm-callback"; // Or your local callback
+
     const paytmParams = {
       body: {
+        requestType: "Payment",
         mid: mid,
-        linkName: `Order ${orderId}`,
-        linkDescription: "LeafBurst Order Payment",
-        linkType: "GENERIC",
-        amount: formattedAmount,
-        status: "ACTIVE",
-        customerEmail: email || "",
-        customerMobile: phone || "",
-        expiryDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        websiteName: websiteName,
+        orderId: orderId,
+        callbackUrl: callbackUrl,
+        txnAmount: {
+          value: formattedAmount,
+          currency: "INR",
+        },
+        userInfo: {
+          custId: email || "CUST_001",
+          email: email || "",
+          mobile: phone || "",
+        },
       },
     };
 
-    // ✅ CHECKSUM
     const checksum = await PaytmChecksum.generateSignature(
       JSON.stringify(paytmParams.body),
       mkey
     );
 
     paytmParams.head = {
-      tokenType: "AES",
       signature: checksum,
     };
 
-    // ✅ STAGING URL
-    const url = "https://securegw-stage.paytm.in/link/v1/create";
-
-    console.log("PAYMENT LINK REQUEST:", paytmParams);
+    const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`;
 
     const response = await axios.post(url, paytmParams, {
       headers: { "Content-Type": "application/json" },
     });
 
-    console.log("PAYMENT LINK RESPONSE:", response.data);
+    console.log("PAYTM INITIATE TRANSACTION RESPONSE:", response.data);
 
-    if (response.data?.body?.resultInfo?.resultStatus === "SUCCESS") {
+    if (response.data?.body?.resultInfo?.resultStatus === "S") {
       return res.status(200).json({
-        paymentUrl: response.data.body.shortUrl,
-        orderId,
+        txnToken: response.data.body.txnToken,
+        orderId: orderId,
+        amount: formattedAmount,
+        mid: mid,
       });
     }
 
@@ -69,7 +79,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error("PAYMENT LINK ERROR:", error.response?.data || error.message);
+    console.error("PAYMENT ERROR:", error.response?.data || error.message);
 
     return res.status(500).json({
       error: "Internal Server Error",

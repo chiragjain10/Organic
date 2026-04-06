@@ -92,39 +92,93 @@ export default function Checkout() {
     return userOrderRef.id;
   };
 
-  const payWithPaytm = async () => {
-  if (!validateForm()) return;
-
-  setLoading(true);
-
-  try {
-    const resp = await fetch("/api/create-order", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: total,
-        email: user.email,
-        phone: "9999999999", // optional
-      }),
+  const loadScript = (src) =>
+    new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
     });
 
-    const data = await resp.json();
+  const payWithPaytm = async () => {
+    if (!validateForm()) return;
 
-    if (!resp.ok || !data.paymentUrl) {
-      throw new Error(data.error || "Failed to create payment link");
+    setLoading(true);
+
+    try {
+      const resp = await fetch("/api/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: total,
+          email: user.email,
+          phone: "9999999999", // optional
+        }),
+      });
+
+      const data = await resp.json();
+
+      if (!resp.ok || !data.txnToken) {
+        throw new Error(data.error || "Failed to initiate payment");
+      }
+
+      // Save order doc as pending before payment
+      await placeOrderDoc("pending", { provider: "paytm" });
+
+      const isProduction = import.meta.env.VITE_PAYTM_ENVIRONMENT === "production";
+      const host = isProduction ? "securegw.paytm.in" : "securegw-stage.paytm.in";
+      
+      const ok = await loadScript(`https://${host}/merchantpgpui/checkoutjs/merchants/${data.mid}.js`);
+      if (!ok) {
+        throw new Error("Failed to load Paytm Checkout script");
+      }
+
+      var config = {
+        "root": "",
+        "flow": "DEFAULT",
+        "data": {
+          "orderId": data.orderId,
+          "token": data.txnToken,
+          "tokenType": "TXN_TOKEN",
+          "amount": data.amount
+        },
+        "handler": {
+          "notifyMerchant": function(eventName, data) {
+            console.log("notifyEvent => ", eventName);
+          },
+          "transactionStatus": async function(paymentStatus) {
+            console.log("paymentStatus => ", paymentStatus);
+            window.Paytm.CheckoutJS.close();
+            // Since we're using a callback URL, Paytm will actually redirect the user
+            // However, if the checkout is popup based, handle it here:
+            if (paymentStatus.STATUS === "TXN_SUCCESS") {
+              navigate("/orders?status=success");
+            } else {
+              navigate("/orders?status=failed");
+            }
+          }
+        }
+      };
+
+      if (window.Paytm && window.Paytm.CheckoutJS) {
+        window.Paytm.CheckoutJS.init(config).then(function onSuccess() {
+          window.Paytm.CheckoutJS.invoke();
+        }).catch(function onError(error) {
+          console.error("Paytm init error => ", error);
+          alert("Payment gateway error");
+        });
+      }
+
+    } catch (err) {
+      console.error("Payment Error:", err);
+      alert(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    // ✅ REDIRECT TO PAYTM PAGE
-    window.location.href = data.paymentUrl;
-
-  } catch (err) {
-    console.error("Payment Error:", err);
-    alert(err.message);
-    setLoading(false);
-  }
-};
+  };
 
   const handlePlaceOrder = async () => {
     if (payment === "paytm") {

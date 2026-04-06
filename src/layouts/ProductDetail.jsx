@@ -77,10 +77,12 @@ const ProductDetail = () => {
     if (!product) return;
     const amount = Number(product.price || 0) * Number(quantity || 1);
     
-    const merchantId = import.meta.env.VITE_PAYTM_MERCHANT_ID;
-    if (!merchantId) { alert("Paytm merchant ID missing"); return; }
+    const merchantId = "YTxVaZ24286063946762";
 
-    const ok = await loadScript(`https://securegw.paytm.in/merchantpgpui/checkoutjs/merchants/${merchantId}.js`);
+    const isProduction = import.meta.env.VITE_PAYTM_ENVIRONMENT === "production";
+    const host = isProduction ? "securegw.paytm.in" : "securegw-stage.paytm.in";
+
+    const ok = await loadScript(`https://${host}/merchantpgpui/checkoutjs/merchants/${merchantId}.js`);
     if (!ok) return;
     
     let order;
