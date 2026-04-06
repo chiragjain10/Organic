@@ -1,105 +1,60 @@
 import PaytmChecksum from "paytmchecksum";
-import axios from "axios";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
+    return res.status(405).send("Method Not Allowed");
   }
 
   try {
-    const mid = (process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762").trim();
-    const mkey = (process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k").trim();
-    
-    // Website name from your dashboard screenshot
-    const website = (process.env.PAYTM_WEBSITE || "DEFAULT").trim(); 
-    // Merchant ID looks like a production ID
-    const environment = (process.env.PAYTM_ENVIRONMENT || "production").trim(); 
+    const mid = "YTxVaZ24286063946762";
+    const mkey = "s1T8@d5rDD&a%g7k";
+    const website = "DEFAULT";
+    const environment = "production"; // Since it's leafburst.in
 
-    const { amount, notes = {} } = req.body || {};
+    const { amount, userId } = req.body;
 
-    // 1. Validate Amount
-    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-      return res.status(400).json({ error: "Invalid or missing amount" });
+    if (!amount || parseFloat(amount) <= 0) {
+      return res.status(400).send("Invalid amount");
     }
 
-    // 2. Generate Unique IDs
-    // Order ID must be unique. LB prefix + timestamp
-    const receipt = `LB${Date.now()}`;
-    // Customer ID: simple alphanumeric
-    const customerId = notes.userId ? notes.userId.replace(/[^a-zA-Z0-9]/g, "") : `CUST${Date.now()}`;
+    const orderId = "LB" + Date.now();
+    const custId = userId ? userId.replace(/[^a-zA-Z0-9]/g, "") : "CUST" + Date.now();
+    const callbackUrl = `https://leafburst.in/api/paytm-callback`;
 
-    // 3. Format Amount to 2 decimal places as a string
-    const formattedAmount = Number(amount).toFixed(2);
-
-    // 4. Prepare Paytm Request Body
-    const paytmBody = {
-      requestType: "Payment",
-      mid: mid,
-      websiteName: website,
-      orderId: receipt,
-      callbackUrl: `https://leafburst.in/api/paytm-callback`,
-      txnAmount: {
-        value: formattedAmount,
-        currency: "INR",
-      },
-      userInfo: {
-        custId: customerId,
-      },
-      industryTypeId: "Retail",
-      channelId: "WEB",
+    const paytmParams = {
+      MID: mid,
+      WEBSITE: website,
+      INDUSTRY_TYPE_ID: "Retail",
+      CHANNEL_ID: "WEB",
+      ORDER_ID: orderId,
+      CUST_ID: custId,
+      TXN_AMOUNT: parseFloat(amount).toFixed(2),
+      CALLBACK_URL: callbackUrl,
     };
 
-    // 5. Generate Checksum
-    // We stringify manually to ensure the signature matches the sent body exactly
-    const bodyString = JSON.stringify(paytmBody);
-    const checksum = await PaytmChecksum.generateSignature(bodyString, mkey);
-    
-    const paytmRequest = {
-      head: {
-        signature: checksum,
-        version: "v1"
-      },
-      body: paytmBody
-    };
+    const checksum = await PaytmChecksum.generateSignature(paytmParams, mkey);
 
-    // 6. Call Paytm API
     const host = environment === "production" ? "securegw.paytm.in" : "securegw-stage.paytm.in";
-    const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${receipt}`;
+    const url = `https://${host}/order/process`;
 
-    console.log("Paytm Request:", bodyString);
+    // Generate an auto-submitting HTML form
+    let formHtml = `<html><head><title>Redirecting to Paytm...</title></head><body>`;
+    formHtml += `<center><h1>Please do not refresh this page...</h1></center>`;
+    formHtml += `<form method="post" action="${url}" name="paytmForm">`;
 
-    const response = await axios.post(url, JSON.stringify(paytmRequest), {
-      headers: { 
-        "Content-Type": "application/json",
-        "Content-Length": JSON.stringify(paytmRequest).length
-      },
-    });
-
-    console.log("Paytm API Response:", JSON.stringify(response.data));
-
-    const resultInfo = response.data?.body?.resultInfo;
-
-    if (resultInfo?.resultStatus === "S") {
-      res.status(200).json({
-        orderId: receipt,
-        txnToken: response.data.body.txnToken,
-        amount: formattedAmount,
-        mid: mid,
-        environment: environment
-      });
-    } else {
-      res.status(400).json({ 
-        error: resultInfo?.resultMsg || "Paytm initiation failed", 
-        details: resultInfo,
-        sent_body: paytmBody 
-      });
+    for (let key in paytmParams) {
+      formHtml += `<input type="hidden" name="${key}" value="${paytmParams[key]}">`;
     }
-  } catch (e) {
-    console.error("Critical Error in create-order:", e.response?.data || e.message);
-    res.status(500).json({ 
-      error: "Internal Server Error", 
-      details: e.response?.data || e.message 
-    });
+    formHtml += `<input type="hidden" name="CHECKSUMHASH" value="${checksum}">`;
+    formHtml += `</form>`;
+    formHtml += `<script type="text/javascript">document.paytmForm.submit();</script>`;
+    formHtml += `</body></html>`;
+
+    res.setHeader("Content-Type", "text/html");
+    res.status(200).send(formHtml);
+
+  } catch (error) {
+    console.error("Paytm Error:", error);
+    res.status(500).send("Internal Server Error: " + error.message);
   }
 }

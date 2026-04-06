@@ -17,8 +17,11 @@ export default async function handler(req, res) {
   
   const status = body.STATUS;
   const orderId = body.ORDERID;
-  
-  const redirectUrl = `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"}/orders?orderId=${orderId}&status=${status}`;
+  const bankTxnId = body.BANKTXNID || "";
+  const txnId = body.TXNID || "";
+
+  // The redirect URL should be your frontend order confirmation page
+  const redirectUrl = `https://leafburst.in/orders?orderId=${orderId}&status=${status}&txnId=${txnId}`;
 
   if (isVerifySignature) {
     res.redirect(302, redirectUrl);
