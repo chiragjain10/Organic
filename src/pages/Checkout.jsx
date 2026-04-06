@@ -93,54 +93,38 @@ export default function Checkout() {
   };
 
   const payWithPaytm = async () => {
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    setLoading(true);
-    try {
-      // 1. Call Backend to Create Payment Link
-      const resp = await fetch("/api/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: total.toFixed(2),
-          userId: user.uid,
-          email: user.email,
-          phone: "" // Add phone if available in your user object
-        }),
-      });
+  setLoading(true);
 
-      const data = await resp.json();
-      if (!resp.ok || !data.shortUrl) {
-        throw new Error(data.error || "Failed to generate payment link");
-      }
+  try {
+    const resp = await fetch("/api/create-order", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount: total,
+        email: user.email,
+        phone: "9999999999", // optional
+      }),
+    });
 
-      // 2. Save Pending Order to Session Storage (to recover after redirect)
-      const pendingOrder = {
-        userId: user.uid,
-        customerEmail: user.email,
-        customerName: `${address.firstName} ${address.lastName}`,
-        items,
-        address,
-        shipping,
-        subtotal,
-        shippingFee,
-        total,
-        orderId: data.orderId,
-        status: "pending_payment",
-        createdAt: new Date().toISOString()
-      };
-      sessionStorage.setItem("pending_order", JSON.stringify(pendingOrder));
+    const data = await resp.json();
 
-      // 3. Redirect to Paytm Payment Link
-      console.log("Redirecting to Paytm:", data.shortUrl);
-      window.location.href = data.shortUrl;
-
-    } catch (error) {
-      console.error("Payment Error:", error);
-      alert("Order Error: " + error.message);
-      setLoading(false);
+    if (!resp.ok || !data.paymentUrl) {
+      throw new Error(data.error || "Failed to create payment link");
     }
-  };
+
+    // ✅ REDIRECT TO PAYTM PAGE
+    window.location.href = data.paymentUrl;
+
+  } catch (err) {
+    console.error("Payment Error:", err);
+    alert(err.message);
+    setLoading(false);
+  }
+};
 
   const handlePlaceOrder = async () => {
     if (payment === "paytm") {

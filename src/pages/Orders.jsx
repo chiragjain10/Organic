@@ -1,73 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../components/useAuth";
 import { db } from "../components/Firebase";
-import { collection, getDocs, orderBy, query, addDoc, doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { useSearchParams } from "react-router-dom";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 
 export default function Orders() {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
-  const [searchParams] = useSearchParams();
-  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    const handlePaymentResult = async () => {
-      const status = searchParams.get("status");
-      const orderIdFromUrl = searchParams.get("orderId");
-      const pendingOrderStr = sessionStorage.getItem("pending_order");
-
-      if (status === "success" && pendingOrderStr && !processing) {
-        const pendingOrder = JSON.parse(pendingOrderStr);
-        
-        // Verify this is the correct order
-        if (pendingOrder.orderId === orderIdFromUrl || !orderIdFromUrl) {
-          setProcessing(true);
-          try {
-            const orderData = {
-              ...pendingOrder,
-              status: "paid",
-              createdAt: serverTimestamp(),
-              payment: {
-                provider: "paytm",
-                orderId: pendingOrder.orderId,
-                txnId: searchParams.get("txnId") || ""
-              }
-            };
-
-            // 1. Save to user's collection
-            const userOrderRef = await addDoc(collection(db, "users", user.uid, "orders"), orderData);
-            // 2. Save to global collection
-            await setDoc(doc(db, "orders", userOrderRef.id), orderData);
-
-            console.log("Order saved successfully after payment success");
-            sessionStorage.removeItem("pending_order");
-            alert("Payment successful! Your order has been placed.");
-            load(); // Reload list
-          } catch (err) {
-            console.error("Error saving order after payment:", err);
-          } finally {
-            setProcessing(false);
-          }
-        }
-      } else if (status === "failed") {
-        alert("Payment failed. Please try again.");
-        sessionStorage.removeItem("pending_order");
-      }
+    const load = async () => {
+      if (!user) return;
+      const q = query(collection(db, "users", user.uid, "orders"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+      setOrders(snap.docs.map((d)=>({ id: d.id, ...d.data() })));
     };
-
-    if (user && searchParams.get("status")) {
-      handlePaymentResult();
-    }
-  }, [user, searchParams]);
-
-  const load = async () => {
-    if (!user) return;
-    const q = query(collection(db, "users", user.uid, "orders"), orderBy("createdAt", "desc"));
-    const snap = await getDocs(q);
-    setOrders(snap.docs.map((d)=>({ id: d.id, ...d.data() })));
-  };
-
-  useEffect(() => {
     load();
   }, [user]);
 
