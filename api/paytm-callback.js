@@ -2,6 +2,7 @@ import PaytmChecksum from "paytmchecksum";
 import { parse } from "querystring";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import * as functions from "firebase-functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDzZTUGI3a0GaTCapMmC_I4wX3wSRNtZjI",
@@ -21,8 +22,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const mkey = "s1T8@d5rDD&a%g7k";
-    const mid = "YTxVaZ24286063946762";
+    let mid, mkey;
+    try {
+      mid = functions.config().paytm.mid;
+      mkey = functions.config().paytm.key;
+    } catch (e) {
+      // Fallback for local Vercel dev if functions config isn't available
+      mkey = "s1T8@d5rDD&a%g7k";
+      mid = "YTxVaZ24286063946762";
+    }
     
     console.log("MID:", mid); // Temporary debug log
 

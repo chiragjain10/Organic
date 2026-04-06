@@ -1,5 +1,6 @@
 import PaytmChecksum from "paytmchecksum";
 import axios from "axios";
+import * as functions from "firebase-functions";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -7,8 +8,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const mid = "YTxVaZ24286063946762";
-    const mkey = "s1T8@d5rDD&a%g7k";
+    let mid, mkey;
+    try {
+      mid = functions.config().paytm.mid;
+      mkey = functions.config().paytm.key;
+    } catch (e) {
+      // Fallback for local Vercel dev if functions config isn't available
+      mid = "YTxVaZ24286063946762";
+      mkey = "s1T8@d5rDD&a%g7k";
+    }
 
     console.log("MID:", mid); // Temporary debug log
 
@@ -37,9 +45,8 @@ export default async function handler(req, res) {
           currency: "INR",
         },
         userInfo: {
-          custId: email || "CUST_001",
-          email: email || "",
-          mobile: phone || "",
+          custId: "CUST" + Date.now(),
+          mobileNo: phone || "9999999999",
         },
       },
     };
@@ -53,13 +60,15 @@ export default async function handler(req, res) {
       signature: checksum,
     };
 
+    console.log("PAYTM PARAMS:", JSON.stringify(paytmParams));
+
     const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`;
 
     const response = await axios.post(url, paytmParams, {
       headers: { "Content-Type": "application/json" },
     });
 
-    console.log("PAYTM INITIATE TRANSACTION RESPONSE:", response.data);
+    console.log("PAYTM INITIATE TRANSACTION RESPONSE:", JSON.stringify(response.data));
 
     if (response.data?.body?.resultInfo?.resultStatus === "S") {
       return res.status(200).json({
