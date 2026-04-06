@@ -73,7 +73,7 @@ export default function Checkout() {
       // 2. Save to global orders collection (for admin view)
       await setDoc(doc(db, "orders", userOrderRef.id), orderData);
 
-      // 3. Optional: Send notification email (via existing API if it works without Paytm)
+      // 3. Optional: Send notification email
       try {
         await fetch("/api/send-email", {
           method: "POST",
@@ -84,7 +84,8 @@ export default function Checkout() {
           }),
         });
       } catch (e) {
-        console.error("Email notification failed", e);
+        console.warn("Email notification skipped or failed:", e.message);
+        // We don't alert the user here because the order is already saved in Firestore
       }
 
       console.log("Order placed successfully:", userOrderRef.id);
@@ -92,7 +93,7 @@ export default function Checkout() {
       navigate("/orders");
     } catch (error) {
       console.error("Error placing order:", error);
-      alert("Failed to place order. Please try again.");
+      alert("Order Error: Failed to place order. Please try again.");
     } finally {
       setLoading(false);
     }
