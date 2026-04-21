@@ -7,13 +7,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const mid = process.env.PAYTM_MERCHANT_ID;
-    const mkey = process.env.PAYTM_MERCHANT_KEY;
-
-    if (!mid || !mkey) {
-      console.error("Missing PAYTM_MERCHANT_ID or PAYTM_MERCHANT_KEY env vars");
-      return res.status(500).json({ error: "Payment gateway not configured" });
-    }
+    const mid  = process.env.PAYTM_MERCHANT_ID  || "YTxVaZ24286063946762";
+    const mkey = process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k";
 
     const { amount, email, phone } = req.body;
 
