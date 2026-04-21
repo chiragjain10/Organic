@@ -16,45 +16,61 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Amount is required" });
     }
 
-    const orderId = "ORD" + Date.now();
+    const orderId         = "ORD" + Date.now();
     const formattedAmount = parseFloat(amount).toFixed(2);
 
-    const host = "securegw.paytm.in";
-    const websiteName = process.env.PAYTM_WEBSITE || "DEFAULT";
-    const callbackUrl = `${process.env.SITE_URL || "https://www.leafburst.in"}/api/paytm-callback`;
+    const host           = "securegw.paytm.in";
+    const websiteName    = process.env.PAYTM_WEBSITE       || "DEFAULT";
+    const industryTypeId = process.env.PAYTM_INDUSTRY_TYPE || "Retail";
+    const channelId      = process.env.PAYTM_CHANNEL_ID    || "WEB";
+    const callbackUrl    = `${process.env.SITE_URL || "https://www.leafburst.in"}/api/paytm-callback`;
 
-    const paytmParams = {
-      body: {
-        requestType: "Payment",
-        mid,
-        websiteName,
-        orderId,
-        callbackUrl,
-        txnAmount: {
-          value: formattedAmount,
-          currency: "INR",
-        },
-        userInfo: {
-          custId: email ? `CUST_${email.replace(/[^a-zA-Z0-9]/g, "_")}` : `CUST_${Date.now()}`,
-          email: email || "",
-          mobileNo: phone || "9999999999",
-        },
+    const paytmBody = {
+      requestType : "Payment",
+      mid,
+      websiteName,
+      industryTypeId,       // Required for Retail merchants
+      channelId,            // WEB for browser-based payments
+      orderId,
+      callbackUrl,
+      txnAmount: {
+        value   : formattedAmount,
+        currency: "INR",
+      },
+      userInfo: {
+        custId  : "CUST" + Date.now(),   // simple numeric — guaranteed Paytm-safe
+        mobileNo: phone || "9999999999",
       },
     };
 
     const checksum = await PaytmChecksum.generateSignature(
-      JSON.stringify(paytmParams.body),
+      JSON.stringify(paytmBody),
       mkey
     );
 
-    paytmParams.head = { signature: checksum };
+    const paytmParams = {
+      head: { signature: checksum },
+      body: paytmBody,
+    };
 
-    const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`;
+    console.log("[create-order] Initiating transaction:", {
+      mid,
+      websiteName,
+      industryTypeId,
+      channelId,
+      orderId,
+      amount: formattedAmount,
+      callbackUrl,
+    });
 
+    const url      = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`;
     const response = await axios.post(url, paytmParams, {
       headers: { "Content-Type": "application/json" },
-      timeout: 10000,
+      timeout: 12000,
     });
+
+    // Log full raw Paytm response — visible in Vercel → Functions → Logs
+    console.log("[create-order] Paytm raw response:", JSON.stringify(response.data));
 
     const resultInfo = response.data?.body?.resultInfo;
 
@@ -62,22 +78,24 @@ export default async function handler(req, res) {
       return res.status(200).json({
         txnToken: response.data.body.txnToken,
         orderId,
-        amount: formattedAmount,
+        amount  : formattedAmount,
         mid,
       });
     }
 
-    console.error("Paytm initiate failed:", resultInfo);
+    // Surface the actual Paytm code + message for debugging
+    console.error("[create-order] Paytm rejected:", resultInfo);
     return res.status(400).json({
-      error: resultInfo?.resultMsg || "Payment initiation failed",
-      details: resultInfo,
+      error     : resultInfo?.resultMsg  || "Payment initiation failed",
+      resultCode: resultInfo?.resultCode || "UNKNOWN",
+      details   : resultInfo,
     });
 
   } catch (error) {
     const errDetail = error.response?.data || error.message;
-    console.error("create-order error:", errDetail);
+    console.error("[create-order] Exception:", JSON.stringify(errDetail));
     return res.status(500).json({
-      error: "Internal Server Error",
+      error  : "Internal Server Error",
       details: errDetail,
     });
   }

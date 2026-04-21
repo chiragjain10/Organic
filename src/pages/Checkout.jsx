@@ -157,7 +157,9 @@ export default function Checkout() {
       const data = await resp.json();
 
       if (!resp.ok || !data.txnToken) {
-        throw new Error(data.error || "Failed to initiate payment");
+        // Include Paytm resultCode in the message so we can diagnose from the browser
+        const code = data.resultCode ? ` [Code: ${data.resultCode}]` : "";
+        throw new Error((data.error || "Failed to initiate payment") + code);
       }
 
       // 2. Persist the order with "pending" status BEFORE opening the gateway
