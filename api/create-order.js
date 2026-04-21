@@ -7,12 +7,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const mid  = process.env.PAYTM_MERCHANT_ID;
-    const mkey = process.env.PAYTM_MERCHANT_KEY;
-
-    if (!mid || !mkey) {
-      return res.status(500).json({ error: "Paytm credentials not configured" });
-    }
+    // Staging test credentials (fallback if env vars not set on Vercel)
+    const mid  = process.env.PAYTM_MERCHANT_ID  || "UjGKLV74032327857279";
+    const mkey = process.env.PAYTM_MERCHANT_KEY || "1hYpihoEUbOx9Ct1";
 
     const { amount, phone } = req.body;
 
@@ -24,7 +21,8 @@ export default async function handler(req, res) {
     const formattedAmount = parseFloat(amount).toFixed(2);
 
     // Use staging gateway for test/dev, production for live
-    const isStaging  = process.env.PAYTM_ENVIRONMENT === "staging";
+    // Default to staging unless explicitly set to production
+    const isStaging  = (process.env.PAYTM_ENVIRONMENT || "staging") !== "production";
     const host        = isStaging ? "securegw-stage.paytm.in" : "securegw.paytm.in";
     const websiteName = process.env.PAYTM_WEBSITE || (isStaging ? "WEBSTAGING" : "DEFAULT");
 
