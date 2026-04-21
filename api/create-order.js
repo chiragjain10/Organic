@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     const mid  = process.env.PAYTM_MERCHANT_ID  || "YTxVaZ24286063946762";
     const mkey = process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k";
 
-    const { amount, email, phone } = req.body;
+    const { amount, phone } = req.body;
 
     if (!amount) {
       return res.status(400).json({ error: "Amount is required" });
@@ -19,18 +19,19 @@ export default async function handler(req, res) {
     const orderId         = "ORD" + Date.now();
     const formattedAmount = parseFloat(amount).toFixed(2);
 
-    const host           = "securegw.paytm.in";
-    const websiteName    = process.env.PAYTM_WEBSITE       || "DEFAULT";
-    const industryTypeId = process.env.PAYTM_INDUSTRY_TYPE || "Retail";
-    const channelId      = process.env.PAYTM_CHANNEL_ID    || "WEB";
-    const callbackUrl    = `${process.env.SITE_URL || "https://www.leafburst.in"}/api/paytm-callback`;
+    // Use staging gateway for test/dev, production for live
+    const isStaging  = (process.env.PAYTM_ENVIRONMENT || "production") === "staging";
+    const host        = isStaging ? "securegw-stage.paytm.in" : "securegw.paytm.in";
+    const websiteName = process.env.PAYTM_WEBSITE || "DEFAULT";
+    const callbackUrl = `${process.env.SITE_URL || "https://www.leafburst.in"}/api/paytm-callback`;
 
+    // ── Strictly minimal body per Paytm initiateTransaction v1 spec ──────────
+    // Do NOT add extra fields (industryTypeId, channelId, email, etc.) here.
+    // Extra fields are not recognised by this API and cause error 501.
     const paytmBody = {
-      requestType : "Payment",
+      requestType: "Payment",
       mid,
       websiteName,
-      industryTypeId,       // Required for Retail merchants
-      channelId,            // WEB for browser-based payments
       orderId,
       callbackUrl,
       txnAmount: {
@@ -38,7 +39,7 @@ export default async function handler(req, res) {
         currency: "INR",
       },
       userInfo: {
-        custId  : "CUST" + Date.now(),   // simple numeric — guaranteed Paytm-safe
+        custId  : "CUST" + Date.now(),
         mobileNo: phone || "9999999999",
       },
     };
@@ -53,24 +54,20 @@ export default async function handler(req, res) {
       body: paytmBody,
     };
 
-    console.log("[create-order] Initiating transaction:", {
-      mid,
-      websiteName,
-      industryTypeId,
-      channelId,
-      orderId,
-      amount: formattedAmount,
-      callbackUrl,
-    });
+    console.log("[create-order] Gateway:", host);
+    console.log("[create-order] Params:", JSON.stringify({
+      mid, websiteName, orderId, amount: formattedAmount, callbackUrl,
+    }));
 
-    const url      = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`;
+    const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`;
+
     const response = await axios.post(url, paytmParams, {
       headers: { "Content-Type": "application/json" },
       timeout: 12000,
     });
 
-    // Log full raw Paytm response — visible in Vercel → Functions → Logs
-    console.log("[create-order] Paytm raw response:", JSON.stringify(response.data));
+    // Full Paytm response visible in Vercel → Functions → Logs
+    console.log("[create-order] Paytm response:", JSON.stringify(response.data));
 
     const resultInfo = response.data?.body?.resultInfo;
 
@@ -83,7 +80,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Surface the actual Paytm code + message for debugging
+    // Return resultCode so frontend alert shows: "System Error [Code: 501]"
     console.error("[create-order] Paytm rejected:", resultInfo);
     return res.status(400).json({
       error     : resultInfo?.resultMsg  || "Payment initiation failed",
