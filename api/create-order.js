@@ -7,23 +7,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    let mid = process.env.PAYTM_MERCHANT_ID || "YTxVaZ24286063946762";
-    let mkey = process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k";
-    
-    // Optional: Firebase functions config check if running in Firebase Cloud Functions natively
-    if (process.env.FUNCTIONS_EMULATOR || process.env.GCLOUD_PROJECT) {
-      try {
-        const functions = require("firebase-functions");
-        if (functions.config().paytm) {
-          mid = functions.config().paytm.mid || mid;
-          mkey = functions.config().paytm.key || mkey;
-        }
-      } catch (e) {
-        // Ignore require error if firebase-functions isn't available
-      }
-    }
+    const mid = process.env.PAYTM_MERCHANT_ID;
+    const mkey = process.env.PAYTM_MERCHANT_KEY;
 
-    console.log("MID:", mid); // Temporary debug log
+    if (!mid || !mkey) {
+      console.error("Missing PAYTM_MERCHANT_ID or PAYTM_MERCHANT_KEY env vars");
+      return res.status(500).json({ error: "Payment gateway not configured" });
+    }
 
     const { amount, email, phone } = req.body;
 
@@ -35,22 +25,23 @@ export default async function handler(req, res) {
     const formattedAmount = parseFloat(amount).toFixed(2);
 
     const host = "securegw.paytm.in";
-    const websiteName = "DEFAULT";
-    const callbackUrl = "https://www.leafburst.in/api/paytm-callback";
+    const websiteName = process.env.PAYTM_WEBSITE || "DEFAULT";
+    const callbackUrl = `${process.env.SITE_URL || "https://www.leafburst.in"}/api/paytm-callback`;
 
     const paytmParams = {
       body: {
         requestType: "Payment",
-        mid: mid,
-        websiteName: websiteName,
-        orderId: orderId,
-        callbackUrl: callbackUrl,
+        mid,
+        websiteName,
+        orderId,
+        callbackUrl,
         txnAmount: {
           value: formattedAmount,
           currency: "INR",
         },
         userInfo: {
-          custId: "CUST" + Date.now(),
+          custId: email ? `CUST_${email.replace(/[^a-zA-Z0-9]/g, "_")}` : `CUST_${Date.now()}`,
+          email: email || "",
           mobileNo: phone || "9999999999",
         },
       },
@@ -61,40 +52,38 @@ export default async function handler(req, res) {
       mkey
     );
 
-    paytmParams.head = {
-      signature: checksum,
-    };
-
-    console.log("PAYTM PARAMS:", JSON.stringify(paytmParams));
+    paytmParams.head = { signature: checksum };
 
     const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`;
 
     const response = await axios.post(url, paytmParams, {
       headers: { "Content-Type": "application/json" },
+      timeout: 10000,
     });
 
-    console.log("PAYTM INITIATE TRANSACTION RESPONSE:", JSON.stringify(response.data));
+    const resultInfo = response.data?.body?.resultInfo;
 
-    if (response.data?.body?.resultInfo?.resultStatus === "S") {
+    if (resultInfo?.resultStatus === "S") {
       return res.status(200).json({
         txnToken: response.data.body.txnToken,
-        orderId: orderId,
+        orderId,
         amount: formattedAmount,
-        mid: mid,
+        mid,
       });
     }
 
+    console.error("Paytm initiate failed:", resultInfo);
     return res.status(400).json({
-      error: response.data?.body?.resultInfo?.resultMsg,
-      details: response.data?.body?.resultInfo,
+      error: resultInfo?.resultMsg || "Payment initiation failed",
+      details: resultInfo,
     });
 
   } catch (error) {
-    console.error("PAYMENT ERROR:", error.response?.data || error.message);
-
+    const errDetail = error.response?.data || error.message;
+    console.error("create-order error:", errDetail);
     return res.status(500).json({
       error: "Internal Server Error",
-      details: error.response?.data || error.message,
+      details: errDetail,
     });
   }
 }
