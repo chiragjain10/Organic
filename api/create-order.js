@@ -20,18 +20,17 @@ export default async function handler(req, res) {
     const orderId         = "ORD" + Date.now();
     const formattedAmount = parseFloat(amount).toFixed(2);
 
-    // Use staging gateway for test/dev, production for live
-    // Default to staging unless explicitly set to production
-    const isStaging  = (process.env.PAYTM_ENVIRONMENT || "staging") !== "production";
+    // Use staging gateway if using test MID or if environment is set to staging
+    const isTestMid = mid === "UjGKLV74032327857279";
+    const isStaging = isTestMid || (process.env.PAYTM_ENVIRONMENT || "staging") !== "production";
+    
     const host        = isStaging ? "securegw-stage.paytm.in" : "securegw.paytm.in";
     const websiteName = process.env.PAYTM_WEBSITE || (isStaging ? "WEBSTAGING" : "DEFAULT");
 
-    console.log("[create-order] Environment:", isStaging ? "STAGING" : "PRODUCTION");
+    console.log("[create-order] Host:", host, "MID:", mid);
     const callbackUrl = `${process.env.SITE_URL || "https://www.leafburst.in"}/api/paytm-callback`;
 
-    // ── Strictly minimal body per Paytm initiateTransaction v1 spec ──────────
-    // Do NOT add extra fields (industryTypeId, channelId, email, etc.) here.
-    // Extra fields are not recognised by this API and cause error 501.
+    // ── Request Body ──────────────────────────────────────────────────────────
     const paytmBody = {
       requestType: "Payment",
       mid,
@@ -47,6 +46,12 @@ export default async function handler(req, res) {
         mobileNo: phone || "9999999999",
       },
     };
+
+    // Staging accounts often require these fields
+    if (isStaging) {
+      paytmBody.industryTypeId = "Retail";
+      paytmBody.channelId      = "WEB";
+    }
 
     const checksum = await PaytmChecksum.generateSignature(
       JSON.stringify(paytmBody),
