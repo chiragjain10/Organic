@@ -169,10 +169,12 @@ export default function Checkout() {
         paytmOrderId: data.orderId,
       });
 
-      // 3. Load the Paytm Checkout JS for this merchant
-      const host = "securegw.paytm.in";
+      // 3. Load Paytm Checkout JS from the SAME gateway that issued the token.
+      // Staging tokens only work with the staging script and vice versa.
+      // The backend returns which host was used via data.paytmHost.
+      const paytmHost = data.paytmHost || "securegw.paytm.in";
       const scriptLoaded = await loadScript(
-        `https://${host}/merchantpgpui/checkoutjs/merchants/${data.mid}.js`
+        `https://${paytmHost}/merchantpgpui/checkoutjs/merchants.js`
       );
       if (!scriptLoaded) {
         throw new Error("Failed to load Paytm Checkout script");

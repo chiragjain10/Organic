@@ -7,8 +7,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const mid  = process.env.PAYTM_MERCHANT_ID  || "YTxVaZ24286063946762";
-    const mkey = process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k";
+    const mid  = process.env.PAYTM_MERCHANT_ID;
+    const mkey = process.env.PAYTM_MERCHANT_KEY;
+
+    if (!mid || !mkey) {
+      return res.status(500).json({ error: "Paytm credentials not configured" });
+    }
 
     const { amount, phone } = req.body;
 
@@ -20,9 +24,11 @@ export default async function handler(req, res) {
     const formattedAmount = parseFloat(amount).toFixed(2);
 
     // Use staging gateway for test/dev, production for live
-    const isStaging  = (process.env.PAYTM_ENVIRONMENT || "production") === "staging";
+    const isStaging  = process.env.PAYTM_ENVIRONMENT === "staging";
     const host        = isStaging ? "securegw-stage.paytm.in" : "securegw.paytm.in";
-    const websiteName = process.env.PAYTM_WEBSITE || "DEFAULT";
+    const websiteName = process.env.PAYTM_WEBSITE || (isStaging ? "WEBSTAGING" : "DEFAULT");
+
+    console.log("[create-order] Environment:", isStaging ? "STAGING" : "PRODUCTION");
     const callbackUrl = `${process.env.SITE_URL || "https://www.leafburst.in"}/api/paytm-callback`;
 
     // ── Strictly minimal body per Paytm initiateTransaction v1 spec ──────────
@@ -73,10 +79,11 @@ export default async function handler(req, res) {
 
     if (resultInfo?.resultStatus === "S") {
       return res.status(200).json({
-        txnToken: response.data.body.txnToken,
+        txnToken : response.data.body.txnToken,
         orderId,
-        amount  : formattedAmount,
+        amount   : formattedAmount,
         mid,
+        paytmHost: host,   // ← tells frontend which gateway JS to load
       });
     }
 

@@ -52,7 +52,11 @@ export default async function handler(req, res) {
   const siteUrl = process.env.SITE_URL || "https://www.leafburst.in";
 
   try {
-    const mkey = process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k";
+    const mkey = process.env.PAYTM_MERCHANT_KEY;
+    if (!mkey) {
+      console.error("paytm-callback: PAYTM_MERCHANT_KEY not set");
+      return res.redirect(302, `${siteUrl}/orders?status=error`);
+    }
 
     const body = await parseBody(req);
 
