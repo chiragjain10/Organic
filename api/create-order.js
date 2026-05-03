@@ -29,8 +29,6 @@ export default async function handler(req, res) {
     console.log("[create-order] Host:", host, "| MID:", mid, "| Website:", websiteName, "| Amount:", formattedAmount);
 
     // ── Request Body ───────────────────────────────────────────────────────────
-    // NOTE: DO NOT include industryTypeId or channelId in the body —
-    //       those are legacy v2 fields and cause 501 System Error in v1 API.
     const paytmBody = {
       requestType: "Payment",
       mid,
@@ -47,18 +45,21 @@ export default async function handler(req, res) {
       },
     };
 
-    // Generate checksum from body JSON string
+    // Generate checksum from body object
     const checksumHash = await PaytmChecksum.generateSignature(
-      JSON.stringify(paytmBody),
+      paytmBody,
       mkey
     );
 
     // ── Build Paytm params ─────────────────────────────────────────────────────
-    // Per official Paytm Node.js samples: head should only contain signature
     const paytmParams = {
-      head: { signature: checksumHash },
+      head: {
+        signature: checksumHash
+      },
       body: paytmBody,
     };
+
+    console.log("[create-order] Final Payload:", JSON.stringify(paytmParams));
 
     console.log("[create-order] Sending to Paytm:", JSON.stringify({
       url: `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`,

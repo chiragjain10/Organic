@@ -16,6 +16,27 @@ const loadScript = (src) =>
     document.body.appendChild(script);
   });
 
+const Field = ({ label, name, type = "text", placeholder, value, onChange, error }) => (
+  <div className="space-y-2">
+    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6B4F3F]">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={`w-full px-5 py-4 rounded-2xl bg-white border text-[#1E3D2B] font-medium text-sm outline-none transition-all focus:ring-2 focus:ring-[#6E8B3D]/30 ${
+        error
+          ? "border-red-400 focus:border-red-400"
+          : "border-[#6E8B3D]/20 focus:border-[#6E8B3D]/60"
+      }`}
+    />
+    {error && (
+      <p className="text-[10px] text-red-500 font-bold">{error}</p>
+    )}
+  </div>
+);
+
 const Checkout = () => {
   const navigate  = useNavigate();
   const { user }  = useAuth();
@@ -148,27 +169,6 @@ const Checkout = () => {
     );
   }
 
-  const Field = ({ label, name, type = "text", placeholder }) => (
-    <div className="space-y-2">
-      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6B4F3F]">{label}</label>
-      <input
-        type={type}
-        name={name}
-        value={form[name]}
-        onChange={handleChange}
-        placeholder={placeholder}
-        className={`w-full px-5 py-4 rounded-2xl bg-white border text-[#1E3D2B] font-medium text-sm outline-none transition-all focus:ring-2 focus:ring-[#6E8B3D]/30 ${
-          errors[name]
-            ? "border-red-400 focus:border-red-400"
-            : "border-[#6E8B3D]/20 focus:border-[#6E8B3D]/60"
-        }`}
-      />
-      {errors[name] && (
-        <p className="text-[10px] text-red-500 font-bold">{errors[name]}</p>
-      )}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-[#F7F6F2] pt-32 pb-20">
       <SEO
@@ -200,18 +200,61 @@ const Checkout = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="sm:col-span-2">
-                  <Field label="Full Name" name="name" placeholder="Your full name" />
+                  <Field 
+                    label="Full Name" 
+                    name="name" 
+                    placeholder="Your full name" 
+                    value={form.name} 
+                    onChange={handleChange} 
+                    error={errors.name} 
+                  />
                 </div>
                 <div className="sm:col-span-2">
-                  <Field label="Phone Number" name="phone" type="tel" placeholder="10-digit mobile number" />
+                  <Field 
+                    label="Phone Number" 
+                    name="phone" 
+                    type="tel" 
+                    placeholder="10-digit mobile number" 
+                    value={form.phone} 
+                    onChange={handleChange} 
+                    error={errors.phone} 
+                  />
                 </div>
                 <div className="sm:col-span-2">
-                  <Field label="Street Address" name="address" placeholder="House no., street, area" />
+                  <Field 
+                    label="Street Address" 
+                    name="address" 
+                    placeholder="House no., street, area" 
+                    value={form.address} 
+                    onChange={handleChange} 
+                    error={errors.address} 
+                  />
                 </div>
-                <Field label="City" name="city" placeholder="City" />
-                <Field label="State" name="state" placeholder="State" />
+                <Field 
+                  label="City" 
+                  name="city" 
+                  placeholder="City" 
+                  value={form.city} 
+                  onChange={handleChange} 
+                  error={errors.city} 
+                />
+                <Field 
+                  label="State" 
+                  name="state" 
+                  placeholder="State" 
+                  value={form.state} 
+                  onChange={handleChange} 
+                  error={errors.state} 
+                />
                 <div className="sm:col-span-2">
-                  <Field label="PIN Code" name="pincode" placeholder="6-digit PIN" />
+                  <Field 
+                    label="PIN Code" 
+                    name="pincode" 
+                    placeholder="6-digit PIN" 
+                    value={form.pincode} 
+                    onChange={handleChange} 
+                    error={errors.pincode} 
+                  />
                 </div>
               </div>
             </div>
