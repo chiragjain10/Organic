@@ -76,59 +76,78 @@ const ProductDetail = () => {
   const buyNow = async () => {
     if (!product) return;
     const amount = Number(product.price || 0) * Number(quantity || 1);
-    
-    const merchantId = "YTxVaZ24286063946762";
 
-    const host = "securegw.paytm.in";
-
-    const ok = await loadScript(`https://${host}/merchantpgpui/checkoutjs/merchants/${merchantId}.js`);
-    if (!ok) return;
-    
+    // Step 1: Create order on backend → get txnToken + correct paytmHost
     let order;
     try {
       const resp = await fetch("/api/create-order", {
-        method: "POST",
+        method : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: String(amount),
-          currency: "INR"
-        }),
+        body   : JSON.stringify({ amount: String(amount), currency: "INR" }),
       });
       order = await resp.json();
-      if (!order || !order.txnToken) throw new Error("Order creation failed");
-    } catch {
-      order = null;
-    }
-    
-    if (!order) return;
-
-    var config = {
-      "root": "",
-      "flow": "DEFAULT",
-      "data": {
-        "orderId": order.orderId,
-        "token": order.txnToken,
-        "tokenType": "TXN_TOKEN",
-        "amount": String(amount)
-      },
-      "handler": {
-        "notifyMerchant": function(eventName,data){
-          console.log("notifyEvent => ",eventName);
-        },
-        "transactionStatus": async function(data){
-          window.Paytm.CheckoutJS.close();
-          alert("Payment successful");
-          navigate("/account");
-        }
+      if (!resp.ok || !order?.txnToken) {
+        throw new Error(order?.error || "Order creation failed");
       }
+    } catch (err) {
+      console.error("[buyNow] Order creation failed:", err.message);
+      alert("Payment initiation failed: " + err.message);
+      return;
+    }
+
+    // Step 2: Load Paytm CheckoutJS from the correct gateway (production/staging)
+    const host       = order.paytmHost || "securegw.paytm.in";
+    const merchantId = order.mid       || "YTxVaZ24286063946762";
+    const scriptUrl  = `https://${host}/merchantpgpui/checkoutjs/merchants/${merchantId}.js`;
+
+    // Remove any previously loaded Paytm script to avoid stale cache
+    const existingScript = document.querySelector(`script[src="${scriptUrl}"]`);
+    if (!existingScript) {
+      const ok = await loadScript(scriptUrl);
+      if (!ok) {
+        alert("Failed to load payment gateway. Please try again.");
+        return;
+      }
+    }
+
+    // Step 3: Initialise and open Paytm checkout
+    var config = {
+      root: "",
+      flow: "DEFAULT",
+      data: {
+        orderId  : order.orderId,
+        token    : order.txnToken,
+        tokenType: "TXN_TOKEN",
+        amount   : String(amount),
+      },
+      handler: {
+        notifyMerchant: function (eventName, data) {
+          console.log("[Paytm] notifyMerchant =>", eventName, data);
+        },
+        transactionStatus: async function (data) {
+          window.Paytm.CheckoutJS.close();
+          console.log("[Paytm] transactionStatus =>", data);
+          if (data.STATUS === "TXN_SUCCESS") {
+            alert("Payment successful! 🎉");
+            navigate("/orders");
+          } else {
+            alert("Payment was not completed. Status: " + (data.STATUS || "Unknown"));
+          }
+        },
+      },
     };
 
-    if(window.Paytm && window.Paytm.CheckoutJS){
-        window.Paytm.CheckoutJS.init(config).then(function onSuccess() {
-            window.Paytm.CheckoutJS.invoke();
-        }).catch(function onError(error){
-            console.log("error => ",error);
+    if (window.Paytm && window.Paytm.CheckoutJS) {
+      window.Paytm.CheckoutJS.init(config)
+        .then(function onSuccess() {
+          window.Paytm.CheckoutJS.invoke();
+        })
+        .catch(function onError(error) {
+          console.error("[Paytm] CheckoutJS error =>", error);
+          alert("Payment gateway error. Please try again.");
         });
+    } else {
+      alert("Payment gateway not loaded. Please refresh and try again.");
     }
   };
 

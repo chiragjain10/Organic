@@ -7,9 +7,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Staging test credentials (fallback if env vars not set on Vercel)
-    const mid  = process.env.PAYTM_MERCHANT_ID  || "UjGKLV74032327857279";
-    const mkey = process.env.PAYTM_MERCHANT_KEY || "1hYpihoEUbOx9Ct1";
+    // ── Production Credentials ─────────────────────────────────────────────────
+    const mid  = process.env.PAYTM_MERCHANT_ID  || "YTxVaZ24286063946762";
+    const mkey = process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k";
+
+    // ── Gateway host ───────────────────────────────────────────────────────────
+    // Use production gateway. Set env PAYTM_ENV=staging to override.
+    const isStaging   = (process.env.PAYTM_ENV || "production") === "staging";
+    const host        = isStaging ? "securegw-stage.paytm.in" : "securegw.paytm.in";
+    const websiteName = isStaging ? "WEBSTAGING" : (process.env.PAYTM_WEBSITE || "DEFAULT");
 
     const { amount, phone } = req.body;
 
@@ -19,20 +25,13 @@ export default async function handler(req, res) {
 
     const orderId         = "ORD" + Date.now();
     const formattedAmount = parseFloat(amount).toFixed(2);
+    const callbackUrl     = `${process.env.SITE_URL || "https://www.leafburst.in"}/api/paytm-callback`;
 
-    // Use staging gateway if using test MID or if environment is set to staging
-    const isTestMid = mid === "UjGKLV74032327857279";
-    const isStaging = isTestMid || (process.env.PAYTM_ENVIRONMENT || "staging") !== "production";
-    
-    const host        = isStaging ? "securegw-stage.paytm.in" : "securegw.paytm.in";
-    const websiteName = process.env.PAYTM_WEBSITE || (isStaging ? "WEBSTAGING" : "DEFAULT");
+    console.log("[create-order] Host:", host, "| MID:", mid, "| Website:", websiteName);
 
-    console.log("[create-order] Host:", host, "MID:", mid);
-    const callbackUrl = `${process.env.SITE_URL || "https://www.leafburst.in"}/api/paytm-callback`;
-
-    // ── Request Body ──────────────────────────────────────────────────────────
+    // ── Request Body ───────────────────────────────────────────────────────────
     const paytmBody = {
-      requestType: "Payment",
+      requestType   : "Payment",
       mid,
       websiteName,
       orderId,
@@ -45,13 +44,10 @@ export default async function handler(req, res) {
         custId  : "CUST" + Date.now(),
         mobileNo: phone || "9999999999",
       },
+      // Required for DEFAULT website
+      industryTypeId: "Retail",
+      channelId     : "WEB",
     };
-
-    // Staging accounts often require these fields
-    if (isStaging) {
-      paytmBody.industryTypeId = "Retail";
-      paytmBody.channelId      = "WEB";
-    }
 
     const checksum = await PaytmChecksum.generateSignature(
       JSON.stringify(paytmBody),
@@ -63,7 +59,6 @@ export default async function handler(req, res) {
       body: paytmBody,
     };
 
-    console.log("[create-order] Gateway:", host);
     console.log("[create-order] Params:", JSON.stringify({
       mid, websiteName, orderId, amount: formattedAmount, callbackUrl,
     }));
@@ -72,10 +67,9 @@ export default async function handler(req, res) {
 
     const response = await axios.post(url, paytmParams, {
       headers: { "Content-Type": "application/json" },
-      timeout: 12000,
+      timeout: 15000,
     });
 
-    // Full Paytm response visible in Vercel → Functions → Logs
     console.log("[create-order] Paytm response:", JSON.stringify(response.data));
 
     const resultInfo = response.data?.body?.resultInfo;
@@ -86,11 +80,10 @@ export default async function handler(req, res) {
         orderId,
         amount   : formattedAmount,
         mid,
-        paytmHost: host,   // ← tells frontend which gateway JS to load
+        paytmHost: host,
       });
     }
 
-    // Return resultCode so frontend alert shows: "System Error [Code: 501]"
     console.error("[create-order] Paytm rejected:", resultInfo);
     return res.status(400).json({
       error     : resultInfo?.resultMsg  || "Payment initiation failed",
