@@ -7,17 +7,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    // ── Production Credentials ─────────────────────────────────────────────────
+    // ── Credentials ────────────────────────────────────────────────────────────
     const mid  = process.env.PAYTM_MERCHANT_ID  || "YTxVaZ24286063946762";
     const mkey = process.env.PAYTM_MERCHANT_KEY || "s1T8@d5rDD&a%g7k";
 
-    // ── Gateway host ───────────────────────────────────────────────────────────
-    // Use production gateway. Set env PAYTM_ENV=staging to override.
+    // ── Gateway ────────────────────────────────────────────────────────────────
     const isStaging   = (process.env.PAYTM_ENV || "production") === "staging";
     const host        = isStaging ? "securegw-stage.paytm.in" : "securegw.paytm.in";
     const websiteName = isStaging ? "WEBSTAGING" : (process.env.PAYTM_WEBSITE || "DEFAULT");
 
-    const { amount, phone } = req.body;
+    const { amount, phone } = req.body || {};
 
     if (!amount) {
       return res.status(400).json({ error: "Amount is required" });
@@ -27,11 +26,13 @@ export default async function handler(req, res) {
     const formattedAmount = parseFloat(amount).toFixed(2);
     const callbackUrl     = `${process.env.SITE_URL || "https://www.leafburst.in"}/api/paytm-callback`;
 
-    console.log("[create-order] Host:", host, "| MID:", mid, "| Website:", websiteName);
+    console.log("[create-order] Host:", host, "| MID:", mid, "| Website:", websiteName, "| Amount:", formattedAmount);
 
     // ── Request Body ───────────────────────────────────────────────────────────
+    // NOTE: DO NOT include industryTypeId or channelId in the body —
+    //       those are legacy v2 fields and cause 501 System Error in v1 API.
     const paytmBody = {
-      requestType   : "Payment",
+      requestType: "Payment",
       mid,
       websiteName,
       orderId,
@@ -44,23 +45,24 @@ export default async function handler(req, res) {
         custId  : "CUST" + Date.now(),
         mobileNo: phone || "9999999999",
       },
-      // Required for DEFAULT website
-      industryTypeId: "Retail",
-      channelId     : "WEB",
     };
 
-    const checksum = await PaytmChecksum.generateSignature(
+    // Generate checksum from body JSON string
+    const checksumHash = await PaytmChecksum.generateSignature(
       JSON.stringify(paytmBody),
       mkey
     );
 
+    // ── Build Paytm params ─────────────────────────────────────────────────────
+    // Per official Paytm Node.js samples: head should only contain signature
     const paytmParams = {
-      head: { signature: checksum },
+      head: { signature: checksumHash },
       body: paytmBody,
     };
 
-    console.log("[create-order] Params:", JSON.stringify({
-      mid, websiteName, orderId, amount: formattedAmount, callbackUrl,
+    console.log("[create-order] Sending to Paytm:", JSON.stringify({
+      url: `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`,
+      mid, websiteName, orderId, amount: formattedAmount,
     }));
 
     const url = `https://${host}/theia/api/v1/initiateTransaction?mid=${mid}&orderId=${orderId}`;
@@ -70,9 +72,8 @@ export default async function handler(req, res) {
       timeout: 15000,
     });
 
-    console.log("[create-order] Paytm response:", JSON.stringify(response.data));
-
     const resultInfo = response.data?.body?.resultInfo;
+    console.log("[create-order] Paytm resultInfo:", JSON.stringify(resultInfo));
 
     if (resultInfo?.resultStatus === "S") {
       return res.status(200).json({
@@ -84,10 +85,13 @@ export default async function handler(req, res) {
       });
     }
 
-    console.error("[create-order] Paytm rejected:", resultInfo);
+    // Paytm rejected — log full response for debugging
+    console.error("[create-order] REJECTED | Code:", resultInfo?.resultCode, "| Msg:", resultInfo?.resultMsg);
+    console.error("[create-order] Full body:", JSON.stringify(response.data?.body));
+
     return res.status(400).json({
-      error     : resultInfo?.resultMsg  || "Payment initiation failed",
-      resultCode: resultInfo?.resultCode || "UNKNOWN",
+      error     : `${resultInfo?.resultMsg || "Payment initiation failed"} [Code: ${resultInfo?.resultCode || "?"}]`,
+      resultCode: resultInfo?.resultCode || "UNKNOWN",                      
       details   : resultInfo,
     });
 
