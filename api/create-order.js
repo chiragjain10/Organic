@@ -47,13 +47,15 @@ export default async function handler(req, res) {
 
     // Generate checksum from body object
     const checksumHash = await PaytmChecksum.generateSignature(
-      paytmBody,
+      JSON.stringify(paytmBody),
       mkey
     );
 
     // ── Build Paytm params ─────────────────────────────────────────────────────
     const paytmParams = {
       head: {
+        version: "v1",
+        channelId: "WEB",
         signature: checksumHash
       },
       body: paytmBody,
