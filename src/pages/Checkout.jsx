@@ -101,7 +101,7 @@ const Checkout = () => {
       }
 
       // Step 2: Load Paytm CheckoutJS from correct gateway
-      const host       = order.paytmHost || "securegw.paytm.in";
+      const host       = order.paytmHost || "secure.paytmpayments.com";
       const merchantId = order.mid       || "YTxVaZ24286063946762";
       const ok = await loadScript(
         `https://${host}/merchantpgpui/checkoutjs/merchants/${merchantId}.js`

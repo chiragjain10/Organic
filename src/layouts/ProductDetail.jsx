@@ -96,7 +96,7 @@ const ProductDetail = () => {
     }
 
     // Step 2: Load Paytm CheckoutJS from the correct gateway (production/staging)
-    const host       = order.paytmHost || "securegw.paytm.in";
+    const host       = order.paytmHost || "secure.paytmpayments.com";
     const merchantId = order.mid       || "YTxVaZ24286063946762";
     const scriptUrl  = `https://${host}/merchantpgpui/checkoutjs/merchants/${merchantId}.js`;
 

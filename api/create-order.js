@@ -13,7 +13,7 @@ export default async function handler(req, res) {
 
     // ── Gateway ────────────────────────────────────────────────────────────────
     const isStaging   = (process.env.PAYTM_ENV || "production") === "staging";
-    const host        = isStaging ? "securegw-stage.paytm.in" : "securegw.paytm.in";
+    const host        = isStaging ? "securestage.paytmpayments.com" : "secure.paytmpayments.com";
     const websiteName = isStaging ? "WEBSTAGING" : (process.env.PAYTM_WEBSITE || "DEFAULT");
 
     const { amount, phone } = req.body || {};
