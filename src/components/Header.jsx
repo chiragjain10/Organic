@@ -38,7 +38,7 @@ const Header = () => {
             {/* --- BRAND LOGO --- */}
             <Link to="/" onClick={closeMenu} className="flex-shrink-0">
               <img 
-                src="img/logo1.png" 
+                src="/img/logo1.png" 
                 alt="Leaf Burst Logo" 
                 className={`transition-all duration-500 object-contain ${isScrolled ? 'h-10 brightness-0 invert' : 'h-14'}`}
               />

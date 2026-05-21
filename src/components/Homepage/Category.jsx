@@ -40,6 +40,7 @@ const CategoryCard = ({ category }) => (
       <img
         src={category.image}
         alt={category.title}
+        loading="lazy"
         className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-1000"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-[#1E3D2B]/60 opacity-60 group-hover:opacity-80 transition-opacity duration-700" />

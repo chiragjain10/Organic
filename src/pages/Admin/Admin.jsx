@@ -17,6 +17,7 @@ import { useForm } from "react-hook-form";
 import SEO from "../../components/SEO";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../components/useAuth";
+import { X } from "lucide-react";
 
 const uploadToCloudinary = async (file) => {
   const data = new FormData();
@@ -32,18 +33,6 @@ const uploadToCloudinary = async (file) => {
 };
 
 const sidebarItems = ["Dashboard", "Products", "Orders", "Categories", "Users"];
-
-const metricCards = [
-  { label: "Active Products", value: "864", hint: "Across all categories" },
-  { label: "Open Orders", value: "214", hint: "Awaiting fulfillment" },
-  { label: "Today\u2019s Revenue", value: "$4,920", hint: "Live store total" },
-];
-
-const orderRows = [
-  { id: "#98234", customer: "Ariana Dell", total: "$124.00", status: "Paid" },
-  { id: "#98215", customer: "Michael Lee", total: "$89.00", status: "Pending" },
-  { id: "#98198", customer: "Sofia Park", total: "$212.00", status: "Shipped" },
-];
 
 const statusBadgeClasses = (status) => {
   switch (status) {
@@ -640,21 +629,37 @@ export const ProductForm = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // image previews and front-selection index for new product
-  const [imagePreviews, setImagePreviews] = useState([]);
+  // state for images (Files)
+  const [mainImageFiles, setMainImageFiles] = useState([]);
+  const [detailImageFiles, setDetailImageFiles] = useState([]);
   const [frontIndex, setFrontIndex] = useState(0);
 
   const categories = ["Powders", "Superfoods", "Blends", "Kits"];
+
+  const handleRemoveMain = (idx) => {
+    setMainImageFiles(prev => prev.filter((_, i) => i !== idx));
+    if (frontIndex === idx) setFrontIndex(0);
+    else if (frontIndex > idx) setFrontIndex(prev => prev - 1);
+  };
+
+  const handleRemoveDetail = (idx) => {
+    setDetailImageFiles(prev => prev.filter((_, i) => i !== idx));
+  };
 
   const onSubmit = async (values) => {
     setError("");
     setLoading(true);
     try {
-      const files = values.images?.[0] ? Array.from(values.images) : [];
       const uploadUrls = [];
-      for (const file of files) {
+      for (const file of mainImageFiles) {
         const url = await uploadToCloudinary(file);
         uploadUrls.push(url);
+      }
+
+      const detailUploadUrls = [];
+      for (const file of detailImageFiles) {
+        const url = await uploadToCloudinary(file);
+        detailUploadUrls.push(url);
       }
 
       const docData = {
@@ -663,6 +668,7 @@ export const ProductForm = ({ onSuccess }) => {
         category: values.category,
         description: values.description,
         images: uploadUrls,
+        detailImages: detailUploadUrls, // Store detailed images
         // front image determined by admin selection
         image: uploadUrls[frontIndex] || uploadUrls[0] || "",
         price: Number(values.price) || 0,
@@ -681,7 +687,8 @@ export const ProductForm = ({ onSuccess }) => {
       };
       await addDoc(collection(db, "products"), docData);
       reset();
-      setImagePreviews([]);
+      setMainImageFiles([]);
+      setDetailImageFiles([]);
       setFrontIndex(0);
       if (onSuccess) {
         onSuccess();
@@ -793,39 +800,80 @@ export const ProductForm = ({ onSuccess }) => {
         </div>
       </div>
 
-      <div className="space-y-1">
-        <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Product Images</label>
-        <div className="relative">
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={(e) => {
-              register("images").onChange(e);
-              const files = Array.from(e.target.files || []);
-              const previews = files.map(f => URL.createObjectURL(f));
-              setImagePreviews(previews);
-              setFrontIndex(0);
-            }}
-            className="w-full px-4 py-2.5 rounded-xl border border-dashed border-slate-300 hover:border-[#1E3D2B] transition-colors text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#1E3D2B]/10 file:text-[#1E3D2B] cursor-pointer"
-            {...register("images")}
-          />
-        </div>
-        {imagePreviews.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto mt-2">
-            {imagePreviews.map((src, idx) => (
-              <div
-                key={idx}
-                onClick={() => setFrontIndex(idx)}
-                className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer border ${
-                  frontIndex === idx ? "ring-2 ring-[#1E3D2B]" : "border-slate-200"
-                }`}
-              >
-                <img src={src} className="w-full h-full object-cover" />
-              </div>
-            ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Main Product Images</label>
+          <div className="relative">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                setMainImageFiles(prev => [...prev, ...files]);
+              }}
+              className="w-full px-4 py-2.5 rounded-xl border border-dashed border-slate-300 hover:border-[#1E3D2B] transition-colors text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#1E3D2B]/10 file:text-[#1E3D2B] cursor-pointer"
+            />
           </div>
-        )}
+          <div className="flex gap-2 overflow-x-auto mt-2">
+            {mainImageFiles.map((file, idx) => {
+              const src = URL.createObjectURL(file);
+              return (
+                <div
+                  key={idx}
+                  className={`flex-shrink-0 relative w-16 h-16 rounded-lg overflow-hidden border ${
+                    frontIndex === idx ? "ring-2 ring-[#1E3D2B]" : "border-slate-200"
+                  }`}
+                >
+                  <img src={src} className="w-full h-full object-cover cursor-pointer" onClick={() => setFrontIndex(idx)} />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveMain(idx)}
+                    className="absolute top-0 right-0 p-0.5 bg-red-500 text-white rounded-bl-lg hover:bg-red-600 transition-colors"
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-1" id="detail-images-section">
+          <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Product Detail Images (Description)</label>
+          <div className="relative">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                setDetailImageFiles(prev => [...prev, ...files]);
+              }}
+              className="w-full px-4 py-2.5 rounded-xl border border-dashed border-slate-300 hover:border-[#1E3D2B] transition-colors text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#1E3D2B]/10 file:text-[#1E3D2B] cursor-pointer"
+            />
+          </div>
+          <div className="flex gap-2 overflow-x-auto mt-2">
+            {detailImageFiles.map((file, idx) => {
+              const src = URL.createObjectURL(file);
+              return (
+                <div
+                  key={idx}
+                  className="flex-shrink-0 relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200"
+                >
+                  <img src={src} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveDetail(idx)}
+                    className="absolute top-0 right-0 p-0.5 bg-red-500 text-white rounded-bl-lg hover:bg-red-600 transition-colors"
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-2">
@@ -878,9 +926,14 @@ const EditProductForm = ({ product, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // when editing we show the current images (or the single front image) so
-  // the admin can pick a different front image or upload a new set entirely.
-  const [imagePreviews, setImagePreviews] = useState([]);
+  // state for existing images (URLs)
+  const [existingMainImages, setExistingMainImages] = useState([]);
+  const [existingDetailImages, setExistingDetailImages] = useState([]);
+  
+  // state for new uploads (Files)
+  const [newMainImageFiles, setNewMainImageFiles] = useState([]);
+  const [newDetailImageFiles, setNewDetailImageFiles] = useState([]);
+
   const [frontIndex, setFrontIndex] = useState(0);
 
   const categories = ["Powders", "Superfoods", "Blends", "Kits"];
@@ -900,36 +953,64 @@ const EditProductForm = ({ product, onSuccess }) => {
         how_to_use: product.how_to_use || "",
       });
 
-      // initialize preview array from existing data
-      const imgs = product.images && product.images.length > 0
+      // initialize existing images
+      const mainImgs = product.images && product.images.length > 0
         ? product.images
         : product.image
           ? [product.image]
           : [];
-      setImagePreviews(imgs);
-      const idx = imgs.findIndex(i => i === product.image);
+      setExistingMainImages(mainImgs);
+      
+      const detImgs = product.detailImages || [];
+      setExistingDetailImages(detImgs);
+      
+      const idx = mainImgs.findIndex(i => i === product.image);
       setFrontIndex(idx >= 0 ? idx : 0);
     }
   }, [product, reset]);
+
+  const handleRemoveExistingMain = (idx) => {
+    setExistingMainImages(prev => prev.filter((_, i) => i !== idx));
+    if (frontIndex === idx) setFrontIndex(0);
+    else if (frontIndex > idx) setFrontIndex(prev => prev - 1);
+  };
+
+  const handleRemoveExistingDetail = (idx) => {
+    setExistingDetailImages(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleRemoveNewMain = (idx) => {
+    setNewMainImageFiles(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleRemoveNewDetail = (idx) => {
+    setNewDetailImageFiles(prev => prev.filter((_, i) => i !== idx));
+  };
 
   const onSubmit = async (values) => {
     if (!product?.id) return;
     setError("");
     setLoading(true);
     try {
-      let uploadUrls = product.images || [];
-      const files = values.images?.[0] ? Array.from(values.images) : [];
-      if (files.length > 0) {
-        // new files replace the existing set
-        uploadUrls = [];
-        for (const file of files) {
-          const url = await uploadToCloudinary(file);
-          uploadUrls.push(url);
-        }
+      // 1. Upload new main images
+      const newMainUrls = [];
+      for (const file of newMainImageFiles) {
+        const url = await uploadToCloudinary(file);
+        newMainUrls.push(url);
+      }
+      
+      // 2. Upload new detail images
+      const newDetailUrls = [];
+      for (const file of newDetailImageFiles) {
+        const url = await uploadToCloudinary(file);
+        newDetailUrls.push(url);
       }
 
-      const finalUrls = uploadUrls;
-      const selectedFront = finalUrls[frontIndex] || finalUrls[0] || product.image || "";
+      // 3. Combine existing (those not deleted) with new
+      const finalMainUrls = [...existingMainImages, ...newMainUrls];
+      const finalDetailUrls = [...existingDetailImages, ...newDetailUrls];
+
+      const selectedFront = finalMainUrls[frontIndex] || finalMainUrls[0] || "";
 
       const updateData = {
         title: values.title,
@@ -948,8 +1029,9 @@ const EditProductForm = ({ product, onSuccess }) => {
             : Number(values.stock) > 0
             ? "Low Stock"
             : "Out of Stock",
-        images: finalUrls,
+        images: finalMainUrls,
         image: selectedFront,
+        detailImages: finalDetailUrls,
       };
 
       await updateDoc(doc(db, "products", product.id), updateData);
@@ -1063,37 +1145,113 @@ const EditProductForm = ({ product, onSuccess }) => {
         </div>
       </div>
 
-      <div className="space-y-1">
-        <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Update Images (Optional)</label>
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={(e) => {
-            register("images").onChange(e);
-            const files = Array.from(e.target.files || []);
-            const previews = files.map(f => URL.createObjectURL(f));
-            setImagePreviews(previews);
-            setFrontIndex(0);
-          }}
-          className="w-full px-4 py-2.5 rounded-xl border border-dashed border-slate-300 hover:border-[#811331] transition-colors text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#811331]/10 file:text-[#811331] cursor-pointer"
-          {...register("images")}
-        />
-        {imagePreviews.length > 0 && (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Product Main Images</label>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              setNewMainImageFiles(prev => [...prev, ...files]);
+            }}
+            className="w-full px-4 py-2.5 rounded-xl border border-dashed border-slate-300 hover:border-[#811331] transition-colors text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#811331]/10 file:text-[#811331] cursor-pointer"
+          />
           <div className="flex gap-2 overflow-x-auto mt-2">
-            {imagePreviews.map((src, idx) => (
+            {/* Existing Images */}
+            {existingMainImages.map((src, idx) => (
               <div
-                key={idx}
-                onClick={() => setFrontIndex(idx)}
-                className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer border ${
+                key={`exist-${idx}`}
+                className={`flex-shrink-0 relative w-16 h-16 rounded-lg overflow-hidden border ${
                   frontIndex === idx ? "ring-2 ring-[#811331]" : "border-slate-200"
                 }`}
               >
-                <img src={src} className="w-full h-full object-cover" />
+                <img src={src} className="w-full h-full object-cover cursor-pointer" onClick={() => setFrontIndex(idx)} />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveExistingMain(idx)}
+                  className="absolute top-0 right-0 p-0.5 bg-red-500 text-white rounded-bl-lg"
+                >
+                  <X size={10} />
+                </button>
               </div>
             ))}
+            {/* New Uploads */}
+            {newMainImageFiles.map((file, idx) => {
+              const src = URL.createObjectURL(file);
+              const realIdx = existingMainImages.length + idx;
+              return (
+                <div
+                  key={`new-${idx}`}
+                  className={`flex-shrink-0 relative w-16 h-16 rounded-lg overflow-hidden border ${
+                    frontIndex === realIdx ? "ring-2 ring-[#811331]" : "border-slate-200"
+                  }`}
+                >
+                  <img src={src} className="w-full h-full object-cover cursor-pointer" onClick={() => setFrontIndex(realIdx)} />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveNewMain(idx)}
+                    className="absolute top-0 right-0 p-0.5 bg-red-500 text-white rounded-bl-lg"
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Product Detail Images</label>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              setNewDetailImageFiles(prev => [...prev, ...files]);
+            }}
+            className="w-full px-4 py-2.5 rounded-xl border border-dashed border-slate-300 hover:border-[#811331] transition-colors text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#811331]/10 file:text-[#811331] cursor-pointer"
+          />
+          <div className="flex gap-2 overflow-x-auto mt-2">
+            {/* Existing Detail Images */}
+            {existingDetailImages.map((src, idx) => (
+              <div
+                key={`exist-det-${idx}`}
+                className="flex-shrink-0 relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200"
+              >
+                <img src={src} className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveExistingDetail(idx)}
+                  className="absolute top-0 right-0 p-0.5 bg-red-500 text-white rounded-bl-lg"
+                >
+                  <X size={10} />
+                </button>
+              </div>
+            ))}
+            {/* New Detail Uploads */}
+            {newDetailImageFiles.map((file, idx) => {
+              const src = URL.createObjectURL(file);
+              return (
+                <div
+                  key={`new-det-${idx}`}
+                  className="flex-shrink-0 relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200"
+                >
+                  <img src={src} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveNewDetail(idx)}
+                    className="absolute top-0 right-0 p-0.5 bg-red-500 text-white rounded-bl-lg"
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-2">

@@ -76,6 +76,7 @@ const ProductCard = ({ product, showToast, setSelectedProduct }) => {
       <div className="relative aspect-square bg-[#F7F6F2] rounded-[2.5rem] overflow-hidden mb-6 flex items-center justify-center">
         <img 
           src={product.image || product.images?.[0]} 
+          loading="lazy"
           className="w-[85%] h-[85%] object-contain mix-blend-multiply transform transition-all duration-1000 group-hover:scale-110 group-hover:-rotate-3"
         />
         

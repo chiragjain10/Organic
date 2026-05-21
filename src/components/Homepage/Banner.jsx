@@ -89,6 +89,7 @@ const PremiumPromoBanner = () => {
             >
               <img 
                 src="img/a (5).jpeg" 
+                loading="lazy"
                 className="w-full h-full object-cover opacity-80 mix-blend-luminosity grayscale-[30%] hover:grayscale-0 transition-all duration-700"
                 alt="Organic Ritual"
               />

@@ -14,11 +14,11 @@ const OrganicPreloader = ({ onComplete }) => {
           clearInterval(timer);
           return 100;
         }
-        // Mimicking natural growth: fast starts, slow finishes
-        const increment = prev > 70 ? Math.random() * 2 : Math.random() * 12;
-        return    Math.min(prev + increment, 100);
+        // Speeding up the progress: larger random increments
+        const increment = prev > 80 ? Math.floor(Math.random() * 15) + 5 : Math.floor(Math.random() * 25) + 10;
+        return Math.min(prev + increment, 100);
       });
-    }, 100);
+    }, 80); // Reduced interval from 100ms to 80ms
 
     return () => {
       clearInterval(timer);
@@ -32,8 +32,8 @@ const OrganicPreloader = ({ onComplete }) => {
         setIsExpanding(true);
         setTimeout(() => {
           if (onComplete) onComplete();
-        }, 1000);
-      }, 600);
+        }, 600); // Reduced from 1000ms
+      }, 300); // Reduced from 600ms
     }
   }, [progress, onComplete]);
 
@@ -102,12 +102,6 @@ const OrganicPreloader = ({ onComplete }) => {
       {/* Textured Overlay (Grain) */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')]" />
 
-      <style>{`
-        @font-face {
-          font-family: 'serif';
-          src: url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,700&display=swap');
-        }
-      `}</style>
     </div>
   );
 };

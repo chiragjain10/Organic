@@ -14,7 +14,7 @@ const Hero = () => {
           {/* --- LEFT: Content Block (Col 1-7) --- */}
           <div className="lg:col-span-7 space-y-10 lg:pr-12">
 
-            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white border border-[#1E3D2B]/5 shadow-sm">
+            <div className="inline-flex items-center gap-3 px-4 py-2 mt-6 rounded-full bg-white border border-[#1E3D2B]/5 shadow-sm">
               <span className="flex h-2 w-2 rounded-full bg-[#6E8B3D] animate-pulse" />
               <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#1E3D2B]/60">
                 FRESH BATCH • DIRECT FROM FARMS
@@ -22,7 +22,7 @@ const Hero = () => {
             </div>
 
             <div className="space-y-6">
-              <h1 className="text-6xl md:text-8xl font-light tracking-tight leading-[0.9] text-[#1E3D2B]">
+              <h1 className="text-6xl md:text-7xl font-light tracking-tight leading-[0.9] text-[#1E3D2B]">
                 Nature’s <br />
                 <span className="relative">
                   <span className="font-serif italic font-normal text-[#6E8B3D]">Purest</span>

@@ -73,82 +73,9 @@ const ProductDetail = () => {
       document.body.appendChild(script);
     });
 
-  const buyNow = async () => {
+  const buyNow = () => {
     if (!product) return;
-    const amount = Number(product.price || 0) * Number(quantity || 1);
-
-    // Step 1: Create order on backend → get txnToken + correct paytmHost
-    let order;
-    try {
-      const resp = await fetch("/api/create-order", {
-        method : "POST",
-        headers: { "Content-Type": "application/json" },
-        body   : JSON.stringify({ amount: String(amount), currency: "INR" }),
-      });
-      order = await resp.json();
-      if (!resp.ok || !order?.txnToken) {
-        throw new Error(order?.error || "Order creation failed");
-      }
-    } catch (err) {
-      console.error("[buyNow] Order creation failed:", err.message);
-      alert("Payment initiation failed: " + err.message);
-      return;
-    }
-
-    // Step 2: Load Paytm CheckoutJS from the correct gateway (production/staging)
-    const host       = order.paytmHost || "secure.paytmpayments.com";
-    const merchantId = order.mid       || "YTxVaZ24286063946762";
-    const scriptUrl  = `https://${host}/merchantpgpui/checkoutjs/merchants/${merchantId}.js`;
-
-    // Remove any previously loaded Paytm script to avoid stale cache
-    const existingScript = document.querySelector(`script[src="${scriptUrl}"]`);
-    if (!existingScript) {
-      const ok = await loadScript(scriptUrl);
-      if (!ok) {
-        alert("Failed to load payment gateway. Please try again.");
-        return;
-      }
-    }
-
-    // Step 3: Initialise and open Paytm checkout
-    var config = {
-      root: "",
-      flow: "DEFAULT",
-      data: {
-        orderId  : order.orderId,
-        token    : order.txnToken,
-        tokenType: "TXN_TOKEN",
-        amount   : String(amount),
-      },
-      handler: {
-        notifyMerchant: function (eventName, data) {
-          console.log("[Paytm] notifyMerchant =>", eventName, data);
-        },
-        transactionStatus: async function (data) {
-          window.Paytm.CheckoutJS.close();
-          console.log("[Paytm] transactionStatus =>", data);
-          if (data.STATUS === "TXN_SUCCESS") {
-            alert("Payment successful! 🎉");
-            navigate("/orders");
-          } else {
-            alert("Payment was not completed. Status: " + (data.STATUS || "Unknown"));
-          }
-        },
-      },
-    };
-
-    if (window.Paytm && window.Paytm.CheckoutJS) {
-      window.Paytm.CheckoutJS.init(config)
-        .then(function onSuccess() {
-          window.Paytm.CheckoutJS.invoke();
-        })
-        .catch(function onError(error) {
-          console.error("[Paytm] CheckoutJS error =>", error);
-          alert("Payment gateway error. Please try again.");
-        });
-    } else {
-      alert("Payment gateway not loaded. Please refresh and try again.");
-    }
+    navigate("/checkout", { state: { directBuy: { ...product, quantity } } });
   };
 
   if (loading) {
@@ -268,6 +195,7 @@ const ProductDetail = () => {
                     <img
                       src={src}
                       alt={`thumbnail-${i + 1}`}
+                      loading="lazy"
                       className="w-full h-20 object-cover bg-[#F7F6F2]"
                     />
                   </button>
@@ -437,6 +365,31 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* --- Product Detail Images (Descriptive Images) --- */}
+        {product.detailImages && product.detailImages.length > 0 && (
+          <div className="mt-20 md:mt-32 space-y-12">
+            <div className="text-center space-y-4">
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#6E8B3D]">Deep Dive</span>
+              <h2 className="text-4xl md:text-6xl font-light text-[#1E3D2B] leading-none tracking-tighter">
+                Product <span className="font-serif italic text-[#6E8B3D]">In Focus</span>
+              </h2>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-8">
+              {product.detailImages.map((img, idx) => (
+                <div key={idx} className="rounded-[48px] overflow-hidden border border-[#6E8B3D]/10 bg-white">
+                  <img 
+                    src={img} 
+                    alt={`Product detail ${idx + 1}`} 
+                    className="w-full h-auto object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

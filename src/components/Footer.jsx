@@ -22,19 +22,7 @@ const Footer = () => {
       <div className="max-w-[1300px] mx-auto relative z-10">
 
         {/* --- TRUST BOOSTERS ROW --- */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-16 border-b border-[#1E3D2B]/5">
-          {[
-            { icon: Leaf, text: "100% Natural" },
-            { icon: CheckCircle2, text: "Lab Tested" },
-            { icon: Truck, text: "Fast Delivery" },
-            { icon: ShieldCheck, text: "Secure Payments" }
-          ].map((item, idx) => (
-            <div key={idx} className="flex items-center justify-center md:justify-start gap-3 opacity-70">
-              <item.icon size={16} className="text-[#6E8B3D]" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#1E3D2B]">{item.text}</span>
-            </div>
-          ))}
-        </div>
+        
 
         {/* --- MAIN CONTENT GRID --- */}
         <div className="grid lg:grid-cols-12 gap-16 lg:gap-8 py-16">
@@ -44,7 +32,7 @@ const Footer = () => {
             {/* --- BRAND LOGO --- */}
             <Link to="/" className="inline-block group">
               <img 
-                src="img/logo1.png" 
+                src="/img/logo1.png" 
                 alt="Leaf Burst Logo" 
                 className="h-16 object-contain transition-transform duration-500 group-hover:scale-105"
               />
