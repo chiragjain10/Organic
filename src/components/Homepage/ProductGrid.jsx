@@ -65,59 +65,59 @@ const ProductCard = ({ product, showToast, setSelectedProduct }) => {
   return (
     <motion.div 
       layout
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
+      exit={{ opacity: 0, scale: 0.95 }}
       onClick={() => navigate(`/product/${product.id}`)}
-      className="group relative bg-white rounded-[3rem] p-5 border border-[#1E3D2B]/5 hover:border-[#6E8B3D]/30 transition-all duration-700 cursor-pointer overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-[#1E3D2B]/5"
+      className="group relative bg-white rounded-[2rem] p-4 border border-[#1E3D2B]/8 hover:border-[#6E8B3D]/30 transition-all duration-500 cursor-pointer overflow-hidden shadow-sm hover:shadow-xl hover:shadow-[#1E3D2B]/3"
     >
-      <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+      <div className="absolute inset-0 opacity-[0.01] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
       
-      <div className="relative aspect-square bg-[#F7F6F2] rounded-[2.5rem] overflow-hidden mb-6 flex items-center justify-center">
+      <div className="relative aspect-square bg-[#F7F6F2] rounded-2xl overflow-hidden mb-4 flex items-center justify-center">
         <img 
           src={product.image || product.images?.[0]} 
           loading="lazy"
-          className="w-[85%] h-[85%] object-contain mix-blend-multiply transform transition-all duration-1000 group-hover:scale-110 group-hover:-rotate-3"
+          className="w-[80%] h-[80%] object-contain mix-blend-multiply transform transition-all duration-700 group-hover:scale-105 group-hover:-rotate-2"
         />
         
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 p-1.5 bg-white/40 backdrop-blur-md rounded-full opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 p-1 bg-white/40 backdrop-blur-md rounded-full opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
            <button 
              onClick={(e) => { e.stopPropagation(); setSelectedProduct(product); }}
-             className="w-10 h-10 rounded-full bg-white text-[#1E3D2B] flex items-center justify-center hover:bg-[#1E3D2B] hover:text-white transition-all shadow-sm"
+             className="w-8 h-8 rounded-full bg-white text-[#1E3D2B] flex items-center justify-center hover:bg-[#1E3D2B] hover:text-white transition-all shadow-sm"
            >
-             <Eye size={15} strokeWidth={1.5} />
+             <Eye size={13} strokeWidth={1.5} />
            </button>
            <button 
              onClick={toggleWishlist}
-             className="w-10 h-10 rounded-full bg-white text-[#1E3D2B] flex items-center justify-center hover:bg-[#6E8B3D] hover:text-white transition-all shadow-sm"
+             className="w-8 h-8 rounded-full bg-white text-[#1E3D2B] flex items-center justify-center hover:bg-[#6E8B3D] hover:text-white transition-all shadow-sm"
            >
-             <Heart size={15} strokeWidth={1.5} fill={shop?.isInWishlist(product.id) ? "currentColor" : "none"} />
+             <Heart size={13} strokeWidth={1.5} fill={shop?.isInWishlist(product.id) ? "currentColor" : "none"} />
            </button>
         </div>
 
         {product.isNew && (
-            <div className="absolute top-4 left-4 px-3 py-1 bg-[#1E3D2B] rounded-full">
-                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[#F7F6F2]">New Arrival</p>
+            <div className="absolute top-3 left-3 px-2 py-0.5 bg-[#1E3D2B] rounded-full">
+                <p className="text-[7px] font-bold uppercase tracking-wider text-[#F7F6F2]">New</p>
             </div>
         )}
       </div>
 
-      <div className="space-y-4 px-2">
+      <div className="space-y-2.5 px-1">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-[1px] bg-[#6E8B3D]/30" />
-            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[#6E8B3D]">
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-[1px] bg-[#6E8B3D]/30" />
+            <span className="text-[8px] font-extrabold uppercase tracking-[0.2em] text-[#6E8B3D]">
               {product.category || 'Pure Organic'}
             </span>
           </div>
-        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F7F6F2]">
-          <Star size={8} fill="#6E8B3D" className="text-[#6E8B3D]" /> 
-          <span className="text-[10px] font-bold text-[#1E3D2B]">{product.rating || '4.9'}</span>
+          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#F7F6F2]">
+            <Star size={7} fill="#6E8B3D" className="text-[#6E8B3D]" /> 
+            <span className="text-[9px] font-bold text-[#1E3D2B]">{product.rating || '4.9'}</span>
           </div>
         </div>
 
         <div>
-          <h3 className="text-xl font-light text-[#1E3D2B] leading-none tracking-tighter mb-1">
+          <h3 className="text-lg font-light text-[#1E3D2B] leading-tight tracking-tight">
             {(() => {
               const t = (product.title || product.name || '').trim();
               const parts = t.split(' ');
@@ -127,28 +127,28 @@ const ProductCard = ({ product, showToast, setSelectedProduct }) => {
             {(() => {
               const t = (product.title || product.name || '').trim();
               const rest = t.split(' ').slice(1).join(' ');
-              return rest ? <span className="font-black italic ml-1">{rest}</span> : null;
+              return rest ? <span className="font-bold italic ml-1">{rest}</span> : null;
             })()}
           </h3>
-          <p className="text-[10px] text-[#6B4F3F]/60 font-medium">Lab-Tested • Preservative Free</p>
+          <p className="text-[9px] text-[#6B4F3F]/60 font-medium">Lab-Tested • Preservative Free</p>
         </div>
 
-        <div className="flex items-end justify-between pt-2">
+        <div className="flex items-end justify-between pt-1">
           <div className="flex flex-col">
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#1E3D2B]/30">Price</span>
-          <span className="text-2xl font-black text-[#1E3D2B]">₹{product.price}</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-[#1E3D2B]/30">Price</span>
+            <span className="text-xl font-extrabold text-[#1E3D2B]">₹{product.price}</span>
           </div>
           
           <button 
             disabled={loadingType === 'cart'}
             onClick={toggleCart}
-            className="relative flex items-center justify-center w-14 h-14 bg-[#1E3D2B] text-white rounded-2xl hover:bg-[#6E8B3D] transition-all duration-500 group/btn"
+            className="relative flex items-center justify-center w-11 h-11 bg-[#1E3D2B] text-white rounded-xl hover:bg-[#6E8B3D] transition-all duration-300 group/btn"
           >
             {loadingType === 'cart' ? (
-              <Loader2 size={20} className="animate-spin" />
+              <Loader2 size={16} className="animate-spin" />
             ) : (
               <div className="relative">
-                {shop?.isInCart(product.id) ? <span className="text-[10px] font-black">–</span> : <Plus size={24} className="group-hover/btn:rotate-180 transition-transform duration-500" />}
+                {shop?.isInCart(product.id) ? <span className="text-[10px] font-extrabold">–</span> : <Plus size={18} className="group-hover/btn:rotate-180 transition-transform duration-300" />}
               </div>
             )}
           </button>
@@ -176,31 +176,31 @@ const ProductGrid = () => {
     : products.filter(p => p.category === activeCategory);
 
   return (
-    <section className="py-16 md:py-32 bg-[#F7F6F2] px-6 min-h-screen">
-      <div className="max-w-[1300px] mx-auto">
+    <section className="py-12 md:py-20 bg-[#F7F6F2] px-4 md:px-8">
+      <div className="max-w-[1200px] mx-auto">
         
         {/* Header Pod */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 md:mb-20 gap-10 border-b border-[#1E3D2B]/5 pb-12">
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <Sparkles size={18} className="text-[#6E8B3D]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#6E8B3D]">Fresh from Nature</span>
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-14 gap-6 border-b border-[#1E3D2B]/5 pb-6">
+          <div className="space-y-4 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-2.5">
+              <Sparkles size={14} className="text-[#6E8B3D]" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#6E8B3D]">Fresh from Nature</span>
             </div>
-            <h2 className="text-5xl md:text-7xl font-light text-[#1E3D2B] leading-[0.85] tracking-tighter">
+            <h2 className="text-3xl md:text-5xl font-light text-[#1E3D2B] leading-[0.95] tracking-tighter">
               Simple Ingredients. <br />
-              <span className="font-black italic">Powerful Impact.</span>
+              <span className="font-extrabold italic">Powerful Impact.</span>
             </h2>
           </div>
 
-          <div className="flex flex-col items-start md:items-end gap-6">
-            <div className="flex bg-white rounded-full border border-[#1E3D2B]/5 p-2 items-center shadow-sm overflow-x-auto max-w-full scrollbar-hide">
+          <div className="flex flex-col items-center md:items-end gap-4 w-full md:w-auto">
+            <div className="flex bg-white rounded-full border border-[#1E3D2B]/5 p-1 items-center shadow-sm overflow-x-auto max-w-full scrollbar-none">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-500 whitespace-nowrap ${
+                  className={`px-5 py-2.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all duration-300 whitespace-nowrap ${
                     activeCategory === cat.id 
-                    ? 'bg-[#1E3D2B] text-white shadow-lg shadow-[#1E3D2B]/20' 
+                    ? 'bg-[#1E3D2B] text-white shadow-md shadow-[#1E3D2B]/10' 
                     : 'bg-transparent text-[#1E3D2B]/40 hover:text-[#1E3D2B]'
                   }`}
                 >
@@ -214,7 +214,7 @@ const ProductGrid = () => {
         {/* Grid */}
         <motion.div 
             layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
         >
           <AnimatePresence mode='popLayout'>
             {filteredProducts.map(product => (
@@ -225,19 +225,19 @@ const ProductGrid = () => {
 
         {/* Empty State */}
         {filteredProducts.length === 0 && (
-          <div className="py-40 text-center">
-            <p className="font-serif text-3xl italic text-[#1E3D2B]/20">Restocking the harvest...</p>
+          <div className="py-24 text-center">
+            <p className="font-serif text-2xl italic text-[#1E3D2B]/35">Restocking the harvest...</p>
           </div>
         )}
 
         {/* Footer Action */}
-        <div className="mt-0 md:mt-32 flex flex-col items-center gap-6">
-          <div className="h-20 w-[1px] bg-gradient-to-b from-[#1E3D2B]/20 to-transparent" />
+        <div className="mt-8 md:mt-16 flex flex-col items-center gap-4">
+          <div className="h-12 w-[1px] bg-gradient-to-b from-[#1E3D2B]/20 to-transparent" />
           <Link 
             to="/shop" 
-            className="group relative px-12 py-5 overflow-hidden rounded-full border border-[#1E3D2B]/10 transition-all hover:border-[#6E8B3D]"
+            className="group relative px-10 py-4 overflow-hidden rounded-full border border-[#1E3D2B]/10 transition-all hover:border-[#6E8B3D]"
           >
-            <span className="relative z-10 text-[11px] font-bold uppercase tracking-[0.4em] text-[#1E3D2B] group-hover:text-[#6E8B3D]">
+            <span className="relative z-10 text-[10px] font-bold uppercase tracking-[0.3em] text-[#1E3D2B] group-hover:text-[#6E8B3D]">
               Explore All Products
             </span>
             <div className="absolute inset-0 bg-[#6E8B3D]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
