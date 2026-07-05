@@ -91,7 +91,7 @@ const TestimonialSection = () => {
     </a>
 
     <a
-      href="hhttps://www.amazon.in/s?me=A3PZ6U2Q6KHZM4&marketplaceID=A21TJRUUN4KGV"
+      href="https://www.amazon.in/s?me=A3PZ6U2Q6KHZM4&marketplaceID=A21TJRUUN4KGV"
       target="_blank"
       rel="noopener noreferrer"
       className="opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300"
