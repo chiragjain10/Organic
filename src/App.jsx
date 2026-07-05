@@ -32,6 +32,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const ReturnPolicy = lazy(() => import("./pages/ReturnPolicy"));
 const AdminLogin = lazy(() => import("./pages/Admin/AdminLogin"));
+const AdminSignup = lazy(() => import("./pages/Admin/AdminSignup"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Fallback loading component
@@ -55,6 +56,7 @@ const AppRoutes = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/signup" element={<AdminSignup />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/super" element={<SuperAdmin />} />
           <Route path="/login" element={<Login />} />

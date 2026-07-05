@@ -44,7 +44,7 @@ const ScienceSection = () => {
                 
                 <div className="w-full h-full rounded-2xl overflow-hidden shadow-xl group relative">
                   <img 
-                    src="https://images.unsplash.com/photo-1505577058444-a3dab90d4253?auto=format&fit=crop&q=80&w=1200" 
+                    src="https://res.cloudinary.com/duzwys877/image/upload/v1783258334/WhatsApp_Image_2026-07-05_at_18.55.14_daj6iu.jpg" 
                     loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-[1.2s] group-hover:scale-105"
                     alt="Natural Process"

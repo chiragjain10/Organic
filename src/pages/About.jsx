@@ -17,7 +17,7 @@ import SEO from '../components/SEO';
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-[#F7F6F2] pt-32 pb-24 px-6">
+    <div className="min-h-screen bg-[#F7F6F2] pt-26 pb-24 px-6">
       <SEO
         title="About | Leaf Burst"
         description="Leaf Burst crafts Ayurvedic-inspired, lab-tested wellness formulations. Learn our mission and standards."

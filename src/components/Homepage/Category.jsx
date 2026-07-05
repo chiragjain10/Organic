@@ -6,7 +6,7 @@ const categories = [
   {
     title: "Moringa Powder",
     subtitle: "From Leaf to Powder",
-    image: "img/m.jpeg", // Moringa/Green Leaf look
+    image: "https://res.cloudinary.com/duzwys877/image/upload/v1783258121/WhatsApp_Image_2026-07-04_at_12.34.49_j6xofr.jpg", // Moringa/Green Leaf look
     gridClass: "md:col-span-7 lg:col-span-8",
     tag: "Most Popular"
   },
@@ -20,13 +20,13 @@ const categories = [
   {
     title: "Rosemary Dry Leaves",
     subtitle: "Aromatic & Pure",
-    image: "img/r.jpeg", // Herb/Rosemary look
+    image: "https://res.cloudinary.com/duzwys877/image/upload/v1783258121/WhatsApp_Image_2026-07-04_at_12.36.19_jyw8y8.jpg", // Herb/Rosemary look
     gridClass: "md:col-span-5 lg:col-span-4",
   },
   {
     title: "Beetroot Powder",
     subtitle: "Color of Real Nutrition",
-    image: "img/a (6).jpeg", // Deep Red/Beetroot look
+    image: "https://res.cloudinary.com/duzwys877/image/upload/v1783258122/WhatsApp_Image_2026-07-04_at_12.35.05_dia0un.jpg", // Deep Red/Beetroot look
     
      gridClass: "md:col-span-7 lg:col-span-8",
   }

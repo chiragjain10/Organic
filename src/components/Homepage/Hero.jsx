@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
-    <section className="relative pt-16 pb-8 md:pt-20 md:pb-14 px-4 md:px-8 bg-[#F7F6F2] overflow-hidden border-b border-[#1E3D2B]/5">
+    <section className="relative pt-26 pb-8 md:pt-30 md:pb-14 px-4 md:px-8 bg-[#F7F6F2] overflow-hidden border-b border-[#1E3D2B]/5">
       {/* Editorial Decorative Grid lines */}
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#1E3D2B_1px,transparent_1px)] [background-size:24px_24px]" />
       <div className="absolute top-0 right-0 w-1/4 h-full bg-[#E5E3DB]/30 -skew-x-12 translate-x-20 z-0 hidden lg:block" />
