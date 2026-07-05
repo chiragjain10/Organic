@@ -93,7 +93,7 @@ const Hero = () => {
             {/* Main Image Card */}
             <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden border border-[#1E3D2B]/5 shadow-[0_20px_40px_rgba(30,61,43,0.1)] group bg-white">
               <img
-                src="img/hero .jpeg" 
+                src="https://res.cloudinary.com/duzwys877/image/upload/v1783260923/2_lnfqu7.jpg" 
                 alt="Organic Superfood"
                 className="w-full h-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105"
               />

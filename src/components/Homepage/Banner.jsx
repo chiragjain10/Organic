@@ -84,7 +84,7 @@ const PremiumPromoBanner = () => {
               }}
             >
               <img 
-                src="img/a (5).jpeg" 
+                src="https://res.cloudinary.com/duzwys877/image/upload/v1783260906/3_teqnbs.jpg" 
                 loading="lazy"
                 className="w-full h-full object-cover opacity-75 mix-blend-luminosity grayscale-[20%] hover:grayscale-0 transition-all duration-700"
                 alt="Organic Ritual"

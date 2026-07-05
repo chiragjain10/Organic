@@ -20,7 +20,7 @@ const categories = [
   {
     title: "Rosemary Dry Leaves",
     subtitle: "Aromatic & Pure",
-    image: "https://res.cloudinary.com/duzwys877/image/upload/v1783258121/WhatsApp_Image_2026-07-04_at_12.36.19_jyw8y8.jpg", // Herb/Rosemary look
+    image: "https://res.cloudinary.com/duzwys877/image/upload/v1783260913/1_vf32fh.jpg", // Herb/Rosemary look
     gridClass: "md:col-span-5 lg:col-span-4",
   },
   {

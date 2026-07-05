@@ -73,62 +73,62 @@ const TestimonialSection = () => {
         </div>
 
         {/* Minimal Press Bar */}
-        <div className="mt-14 pt-8 border-t border-[#1E3D2B]/5">
+       <div className="mt-14 pt-8 border-t border-[#1E3D2B]/5">
 
-          <p className="text-center text-[8px] font-bold uppercase tracking-[0.4em] text-[#1E3D2B]/35 mb-6">
-            Also Available On
-          </p>
+  <p className="text-center text-xs font-bold uppercase tracking-[0.4em] text-[#1E3D2B]/60 mb-8">
+    Also Available On
+  </p>
 
-          <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-6">
+  <div className="flex flex-wrap justify-center items-center gap-x-14 gap-y-8">
 
-            <a
-              href="https://www.blinkit.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-105 transition-all duration-300"
-            >
-              <img src="/img/logo/b.png" alt="Blinkit" className="h-8 object-contain" />
-            </a>
+    <a
+      href="https://www.blinkit.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300"
+    >
+      <img src="/img/logo/b.png" alt="Blinkit" className="h-12 object-contain" />
+    </a>
 
-            <a
-              href="https://www.amazon.in"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-105 transition-all duration-300"
-            >
-              <img src="/img/logo/a.png" alt="Amazon" className="h-8 object-contain" />
-            </a>
+    <a
+      href="hhttps://www.amazon.in/s?me=A3PZ6U2Q6KHZM4&marketplaceID=A21TJRUUN4KGV"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300"
+    >
+      <img src="/img/logo/a.png" alt="Amazon" className="h-12 object-contain" />
+    </a>
 
-            <a
-              href="https://www.indiamart.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-105 transition-all duration-300"
-            >
-              <img src="/img/logo/i.png" alt="Indiamart" className="h-8 object-contain" />
-            </a>
+    <a
+      href="https://www.indiamart.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300"
+    >
+      <img src="/img/logo/i.png" alt="Indiamart" className="h-12 object-contain" />
+    </a>
 
-            <a
-              href="https://www.flipkart.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-105 transition-all duration-300"
-            >
-              <img src="/img/logo/f.png" alt="Flipkart" className="h-8 object-contain" />
-            </a>
+    <a
+      href="https://www.flipkart.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300"
+    >
+      <img src="/img/logo/f.png" alt="Flipkart" className="h-12 object-contain" />
+    </a>
 
-            <a
-              href="https://www.zepto.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-105 transition-all duration-300"
-            >
-              <img src="/img/logo/z.png" alt="Zepto" className="h-8 object-contain" />
-            </a>
+    <a
+      href="https://www.zepto.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300"
+    >
+      <img src="/img/logo/z.png" alt="Zepto" className="h-12 object-contain" />
+    </a>
 
-          </div>
+  </div>
 
-        </div>
+</div>
       </div>
     </section>
   );
