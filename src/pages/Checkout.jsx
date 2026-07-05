@@ -137,13 +137,15 @@ const Checkout = () => {
       };
 
       if (window.Paytm?.CheckoutJS) {
-        window.Paytm.CheckoutJS.init(config)
-          .then(() => window.Paytm.CheckoutJS.invoke())
-          .catch((err) => {
-            console.error("[Paytm] init error:", err);
-            alert("Payment gateway error. Please try again.");
-            setLoading(false);
-          });
+        window.Paytm.CheckoutJS.onLoad(function executeAfterCompleteLoad() {
+          window.Paytm.CheckoutJS.init(config)
+            .then(() => window.Paytm.CheckoutJS.invoke())
+            .catch((err) => {
+              console.error("[Paytm] init error:", err);
+              alert("Payment gateway error. Please try again.");
+              setLoading(false);
+            });
+        });
       } else {
         throw new Error("Payment gateway not loaded. Please refresh and retry.");
       }
