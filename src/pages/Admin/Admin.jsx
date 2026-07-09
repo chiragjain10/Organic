@@ -66,28 +66,36 @@ const Admin = () => {
 
   const loadOrders = async () => {
     try {
-      // Try collectionGroup with order (requires composite index)
-      const q = query(collectionGroup(db, "orders"), orderBy("createdAt", "desc"));
-      const snap = await getDocs(q);
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      setOrders(list);
-    } catch (error) {
-      console.log("collectionGroup ordered query failed (likely missing index), trying without orderBy...");
-      try {
-        const qUnordered = query(collectionGroup(db, "orders"));
-        const snapUnordered = await getDocs(qUnordered);
-        const list = snapUnordered.docs.map((d) => ({ id: d.id, ...d.data() }));
-        
-        // Client-side sort
-        list.sort((a, b) => {
-          const tA = a.createdAt?.seconds || 0;
-          const tB = b.createdAt?.seconds || 0;
-          return tB - tA;
-        });
-        setOrders(list);
-      } catch (innerErr) {
-        console.log("Failed to fetch orders via collectionGroup:", innerErr);
+      // Manual iteration avoids collectionGroup index or permission issues
+      const usersSnap = await getDocs(collection(db, "users"));
+      let allOrders = [];
+      
+      for (const u of usersSnap.docs) {
+        try {
+          const orderSnap = await getDocs(collection(db, "users", u.id, "orders"));
+          orderSnap.docs.forEach((d) => {
+             allOrders.push({
+                id: d.id,
+                userId: u.id,
+                customerName: d.data().address?.firstName || d.data().customerName || u.data().displayName || u.data().name || "Unknown",
+                ...d.data()
+             });
+          });
+        } catch (e) {
+           console.log("Could not fetch orders for user", u.id, e);
+        }
       }
+
+      // Sort newest first
+      allOrders.sort((a, b) => {
+        const tA = a.createdAt?.seconds || 0;
+        const tB = b.createdAt?.seconds || 0;
+        return tB - tA;
+      });
+
+      setOrders(allOrders);
+    } catch (error) {
+      console.error("Failed to load users/orders:", error);
     }
   };
 
