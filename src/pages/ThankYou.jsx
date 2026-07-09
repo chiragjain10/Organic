@@ -1,29 +1,142 @@
-import React, { useEffect } from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { CheckCircle, Package, ArrowRight, Copy, Receipt } from "lucide-react";
 import SEO from "../components/SEO";
+import { useAuth } from "../components/useAuth";
+import { db } from "../components/Firebase";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import emailjs from "@emailjs/browser";
+
+const EMAILJS_SERVICE_ID        = "service_leafburst";
+const EMAILJS_TEMPLATE_ID       = "template_crc6imx";
+const EMAILJS_ADMIN_TEMPLATE_ID = "template_b5v8smy";
+const EMAILJS_PUBLIC_KEY        = "Gpcqfih8IqMB4QUzb";
+const ADMIN_EMAIL               = "sales@leafburst.in";
 
 export default function ThankYou() {
-  const { state } = useLocation();
+  const [searchParams] = useSearchParams();
   const navigate  = useNavigate();
+  const { user }  = useAuth();
+  
+  const orderId = searchParams.get("orderId");
+  const txnId   = searchParams.get("txnId");
+  const amount  = searchParams.get("amount");
+  
+  const [orderDetails, setOrderDetails] = useState(null);
 
-  // If someone lands here without coming from checkout, redirect to orders
+  // Process sessionStorage and save to Firestore, or fetch if already processed
   useEffect(() => {
-    if (!state?.orderId) {
+    if (!orderId) {
       navigate("/orders", { replace: true });
+      return;
     }
-  }, [state, navigate]);
+    
+    if (!user) return; // wait for auth
 
-  if (!state?.orderId) return null;
+    const processOrder = async () => {
+      const sessionKey = "pendingOrder_" + orderId;
+      const pendingDataStr = sessionStorage.getItem(sessionKey);
+      
+      if (pendingDataStr) {
+        try {
+          const pendingData = JSON.parse(pendingDataStr);
+          
+          // 1. Save to Firestore
+          const orderRef = doc(db, "users", user.uid, "orders", orderId);
+          await setDoc(orderRef, {
+            orderId   : orderId,
+            status    : "paid",
+            total     : pendingData.total || (amount ? String(Number(amount).toFixed(2)) : "0"),
+            subtotal  : pendingData.total || (amount ? String(Number(amount).toFixed(2)) : "0"),
+            shipping  : "Free",
+            shippingFee: 0,
+            payment   : { provider: "paytm", txnId: txnId || "", status: "TXN_SUCCESS" },
+            address   : pendingData.address,
+            items     : pendingData.items,
+            createdAt : serverTimestamp(),
+          });
+          console.log("[Firestore] Order saved from ThankYou pass-through:", orderId);
+
+          // 2. Send Emails
+          try {
+            const orderItemsList = pendingData.items
+              .map((item) => `${item.title || item.name} (Qty: ${item.quantity || 1}) — ₹${Number(item.price).toFixed(2)}`)
+              .join("\n");
+
+            const emailPayload = {
+              to_name         : pendingData.customerName || "Customer",
+              to_email        : pendingData.customerEmail || "",
+              order_id        : orderId,
+              order_amount    : `₹${pendingData.total}`,
+              order_items     : orderItemsList,
+              delivery_address: `${pendingData.address.line1}, ${pendingData.address.city}, ${pendingData.address.state} — ${pendingData.address.zip}`,
+              phone           : pendingData.address.phone,
+              customer_email  : pendingData.customerEmail || "N/A",
+            };
+
+            const [custResult, adminResult] = await Promise.allSettled([
+              emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, emailPayload, EMAILJS_PUBLIC_KEY),
+              emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_ADMIN_TEMPLATE_ID, { ...emailPayload, to_email: ADMIN_EMAIL }, EMAILJS_PUBLIC_KEY),
+            ]);
+            if (custResult.status === "fulfilled") console.log("[EmailJS] Customer email sent.");
+            if (adminResult.status === "fulfilled") console.log("[EmailJS] Admin email sent.");
+          } catch (e) {
+            console.error("[EmailJS] Failed", e);
+          }
+
+          // 3. Clean up and set local state
+          sessionStorage.removeItem(sessionKey);
+          setOrderDetails({
+            orderId,
+            txnId,
+            total: pendingData.total,
+            items: pendingData.items,
+            customerName: pendingData.customerName,
+            address: pendingData.address
+          });
+
+        } catch (e) {
+          console.error("Failed to process order from sessionStorage:", e);
+        }
+      } else {
+        // Already processed (refresh), just fetch from DB
+        try {
+          const docSnap = await getDoc(doc(db, "users", user.uid, "orders", orderId));
+          if (docSnap.exists()) {
+            const d = docSnap.data();
+            setOrderDetails({
+              orderId,
+              txnId: d.payment?.txnId || txnId,
+              total: d.total,
+              items: d.items,
+              customerName: d.address?.firstName,
+              address: d.address
+            });
+          }
+        } catch (e) {
+           console.error("Failed to fetch order details from Firestore:", e);
+        }
+      }
+    };
+    
+    processOrder();
+  }, [orderId, txnId, amount, user, navigate]);
+
+  if (!orderDetails) {
+    return (
+      <div className="min-h-screen bg-[#F7F6F2] pt-36 pb-20 flex flex-col items-center justify-center gap-6">
+        <div className="w-8 h-8 border-4 border-[#6E8B3D]/20 border-t-[#6E8B3D] rounded-full animate-spin" />
+        <p className="text-sm font-bold text-[#6B4F3F]">Finalising your order...</p>
+      </div>
+    );
+  }
 
   const {
-    orderId,
-    txnId,
     total,
     items = [],
     customerName,
     address,
-  } = state;
+  } = orderDetails;
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).catch(() => {});

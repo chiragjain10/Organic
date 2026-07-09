@@ -110,6 +110,29 @@ const Checkout = () => {
       // Step 2: Load Paytm CheckoutJS from correct gateway
       const host       = order.paytmHost || "secure.paytmpayments.com";
       const merchantId = order.mid       || "YTxVaZ24286063946762";
+      
+      // Save order context to sessionStorage so ThankYou page can read it after callback redirect
+      sessionStorage.setItem("pendingOrder_" + order.orderId, JSON.stringify({
+        customerName: form.name,
+        customerEmail: user?.email || "",
+        total: total.toFixed(2),
+        items: items.map((item) => ({
+          id      : item.id || "",
+          name    : item.title || item.name || "",
+          image   : item.image || item.images?.[0] || "",
+          price   : Number(item.price || 0),
+          quantity: item.quantity || 1,
+        })),
+        address: {
+          firstName: form.name,
+          line1    : form.address,
+          city     : form.city,
+          state    : form.state,
+          zip      : form.pincode,
+          phone    : form.phone,
+        }
+      }));
+
       const ok = await loadScript(
         `https://${host}/merchantpgpui/checkoutjs/merchants/${merchantId}.js`
       );
@@ -133,93 +156,8 @@ const Checkout = () => {
             window.Paytm?.CheckoutJS?.close();
             console.log("[Paytm] status:", data);
             if (data.STATUS === "TXN_SUCCESS") {
-              // ── 1. Save order to Firestore ───────────────────────────────
-              try {
-                const orderRef = doc(db, "users", user.uid, "orders", order.orderId);
-                await setDoc(orderRef, {
-                  orderId   : order.orderId,
-                  status    : "paid",
-                  total     : total.toFixed(2),
-                  subtotal  : total.toFixed(2),
-                  shipping  : "Free",
-                  shippingFee: 0,
-                  payment   : { provider: "paytm", txnId: data.TXNID || "", status: "TXN_SUCCESS" },
-                  address   : {
-                    firstName: form.name,
-                    line1    : form.address,
-                    city     : form.city,
-                    state    : form.state,
-                    zip      : form.pincode,
-                    phone    : form.phone,
-                  },
-                  items: items.map((item) => ({
-                    id      : item.id || "",
-                    name    : item.title || item.name || "",
-                    image   : item.image || item.images?.[0] || "",
-                    price   : Number(item.price || 0),
-                    quantity: item.quantity || 1,
-                  })),
-                  createdAt: serverTimestamp(),
-                });
-                console.log("[Firestore] Order saved:", order.orderId);
-              } catch (dbErr) {
-                console.error("[Firestore] Failed to save order:", dbErr);
-              }
-
-              // ── 2. Send emails via EmailJS (customer + admin) ────────────
-              try {
-                const orderItemsList = items
-                  .map((item) => `${item.title || item.name} (Qty: ${item.quantity || 1}) — ₹${Number(item.price).toFixed(2)}`)
-                  .join("\n");
-
-                const emailPayload = {
-                  to_name         : form.name,
-                  to_email        : user?.email || "",
-                  order_id        : order.orderId,
-                  order_amount    : `₹${total.toFixed(2)}`,
-                  order_items     : orderItemsList,
-                  delivery_address: `${form.address}, ${form.city}, ${form.state} — ${form.pincode}`,
-                  phone           : form.phone,
-                  customer_email  : user?.email || "N/A",
-                };
-
-                const [custResult, adminResult] = await Promise.allSettled([
-                  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID,       emailPayload,                              EMAILJS_PUBLIC_KEY),
-                  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_ADMIN_TEMPLATE_ID, { ...emailPayload, to_email: ADMIN_EMAIL }, EMAILJS_PUBLIC_KEY),
-                ]);
-
-                if (custResult.status  === "fulfilled") console.log("[EmailJS] Customer email sent.");
-                else console.error("[EmailJS] Customer email failed:", custResult.reason);
-                if (adminResult.status === "fulfilled") console.log("[EmailJS] Admin email sent.");
-                else console.error("[EmailJS] Admin email failed:",    adminResult.reason);
-
-              } catch (emailErr) {
-                console.error("[EmailJS] Unexpected error:", emailErr);
-              }
-              // ─────────────────────────────────────────────────────────────
-              navigate("/thank-you", {
-                state: {
-                  orderId     : order.orderId,
-                  txnId       : data.TXNID || "",
-                  total       : total.toFixed(2),
-                  customerName: form.name,
-                  items       : items.map((item) => ({
-                    id      : item.id || "",
-                    name    : item.title || item.name || "",
-                    image   : item.image || item.images?.[0] || "",
-                    price   : Number(item.price || 0),
-                    quantity: item.quantity || 1,
-                  })),
-                  address: {
-                    firstName: form.name,
-                    line1    : form.address,
-                    city     : form.city,
-                    state    : form.state,
-                    zip      : form.pincode,
-                    phone    : form.phone,
-                  },
-                },
-              });
+              const txnId = data.TXNID || "";
+              navigate(`/thank-you?orderId=${encodeURIComponent(order.orderId)}&txnId=${encodeURIComponent(txnId)}&amount=${encodeURIComponent(total.toFixed(2))}&status=SUCCESS`);
             } else {
               alert("Payment was not completed. Status: " + (data.STATUS || "Unknown"));
               setLoading(false);

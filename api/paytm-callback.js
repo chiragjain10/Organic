@@ -57,18 +57,21 @@ export default async function handler(req, res) {
 
     if (txnStatus === "TXN_SUCCESS") {
       console.log(`[paytm-callback] SUCCESS | Order: ${orderId} | TxnID: ${txnId} | Amount: ${amount}`);
-      return res.redirect(302, `/orders?payment=success&order=${orderId}&txn=${txnId}`);
+      return res.redirect(
+        302,
+        `/thank-you?orderId=${encodeURIComponent(orderId)}&txnId=${encodeURIComponent(txnId || "")}&amount=${encodeURIComponent(amount || "")}&status=SUCCESS`
+      );
     }
 
     if (txnStatus === "PENDING") {
       console.warn(`[paytm-callback] PENDING | Order: ${orderId}`);
-      return res.redirect(302, `/orders?payment=pending&order=${orderId}`);
+      return res.redirect(302, `/orders?payment=pending&order=${encodeURIComponent(orderId)}`);
     }
 
     // TXN_FAILURE
     const respMsg = paytmParams.RESPMESSAGE || "Payment failed";
     console.error(`[paytm-callback] FAILED | Order: ${orderId} | Code: ${paytmParams.RESPCODE} | Msg: ${respMsg}`);
-    return res.redirect(302, `/?payment=failed&reason=${encodeURIComponent(respMsg)}&order=${orderId}`);
+    return res.redirect(302, `/orders?payment=failed&reason=${encodeURIComponent(respMsg)}&order=${encodeURIComponent(orderId)}`);
 
   } catch (error) {
     console.error("[paytm-callback] Exception:", error.message);
