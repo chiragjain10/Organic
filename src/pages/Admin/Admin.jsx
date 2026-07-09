@@ -5,6 +5,7 @@ import { db } from "../../components/Firebase";
 import {
   addDoc,
   collection,
+  collectionGroup,
   serverTimestamp,
   getDocs,
   query,
@@ -65,12 +66,28 @@ const Admin = () => {
 
   const loadOrders = async () => {
     try {
-      const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+      // Try collectionGroup with order (requires composite index)
+      const q = query(collectionGroup(db, "orders"), orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setOrders(list);
-    } catch {
-      console.log("No orders found");
+    } catch (error) {
+      console.log("collectionGroup ordered query failed (likely missing index), trying without orderBy...");
+      try {
+        const qUnordered = query(collectionGroup(db, "orders"));
+        const snapUnordered = await getDocs(qUnordered);
+        const list = snapUnordered.docs.map((d) => ({ id: d.id, ...d.data() }));
+        
+        // Client-side sort
+        list.sort((a, b) => {
+          const tA = a.createdAt?.seconds || 0;
+          const tB = b.createdAt?.seconds || 0;
+          return tB - tA;
+        });
+        setOrders(list);
+      } catch (innerErr) {
+        console.log("Failed to fetch orders via collectionGroup:", innerErr);
+      }
     }
   };
 
