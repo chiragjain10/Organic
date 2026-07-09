@@ -4,6 +4,15 @@ import { useShopData } from "../components/ShopDataProvider";
 import { useAuth } from "../components/useAuth";
 import { ShieldCheck, Truck, MapPin, Phone, User, ArrowRight, Lock } from "lucide-react";
 import SEO from "../components/SEO";
+import emailjs from "@emailjs/browser";
+
+// ── EmailJS Config ──────────────────────────────────────────────────────────
+const EMAILJS_SERVICE_ID        = "service_leafburst";
+const EMAILJS_TEMPLATE_ID       = "template_crc6imx";        // Customer confirmation template
+const EMAILJS_ADMIN_TEMPLATE_ID = "template_b5v8smy";     // Admin notification template
+const EMAILJS_PUBLIC_KEY        = "Gpcqfih8IqMB4QUzb";
+const ADMIN_EMAIL               = "sales@leafburst.in";
+// ────────────────────────────────────────────────────────────────────────────
 
 const loadScript = (src) =>
   new Promise((resolve) => {
@@ -126,7 +135,53 @@ const Checkout = () => {
             window.Paytm?.CheckoutJS?.close();
             console.log("[Paytm] status:", data);
             if (data.STATUS === "TXN_SUCCESS") {
-              alert("🎉 Payment successful! Your order has been placed.");
+              // ── Send emails via EmailJS (customer + admin) ───────────────
+              try {
+                const orderItemsList = items
+                  .map((item) => `${item.title || item.name} (Qty: ${item.quantity || 1}) — ₹${Number(item.price).toFixed(2)}`)
+                  .join("\n");
+
+                const emailPayload = {
+                  to_name          : form.name,
+                  to_email         : user?.email || "",
+                  order_id         : order.orderId,
+                  order_amount     : `₹${total.toFixed(2)}`,
+                  order_items      : orderItemsList,
+                  delivery_address : `${form.address}, ${form.city}, ${form.state} — ${form.pincode}`,
+                  phone            : form.phone,
+                  customer_email   : user?.email || "N/A",
+                };
+
+                // Send both emails in parallel; neither should block the other
+                const [custResult, adminResult] = await Promise.allSettled([
+                  // 1️⃣  Customer confirmation
+                  emailjs.send(
+                    EMAILJS_SERVICE_ID,
+                    EMAILJS_TEMPLATE_ID,
+                    emailPayload,
+                    EMAILJS_PUBLIC_KEY
+                  ),
+                  // 2️⃣  Admin / sales notification
+                  emailjs.send(
+                    EMAILJS_SERVICE_ID,
+                    EMAILJS_ADMIN_TEMPLATE_ID,
+                    { ...emailPayload, to_email: ADMIN_EMAIL },
+                    EMAILJS_PUBLIC_KEY
+                  ),
+                ]);
+
+                if (custResult.status  === "fulfilled") console.log("[EmailJS] Customer confirmation sent.");
+                else console.error("[EmailJS] Customer email failed:", custResult.reason);
+
+                if (adminResult.status === "fulfilled") console.log("[EmailJS] Admin notification sent.");
+                else console.error("[EmailJS] Admin email failed:", adminResult.reason);
+
+              } catch (emailErr) {
+                // Catch-all — email failure must NOT block order confirmation
+                console.error("[EmailJS] Unexpected email error:", emailErr);
+              }
+              // ─────────────────────────────────────────────────────────────
+              alert("🎉 Payment successful! Your order has been placed. A confirmation email has been sent.");
               navigate("/orders");
             } else {
               alert("Payment was not completed. Status: " + (data.STATUS || "Unknown"));
