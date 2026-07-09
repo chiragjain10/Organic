@@ -92,8 +92,8 @@ const Checkout = () => {
 
     setLoading(true);
     try {
-      // Step 1: Create order on backend
-      const resp = await fetch("/api/create-order", {
+      // Step 1: Create order on backend (always use production URL)
+      const resp = await fetch("http://leafburst.in/api/create-order", {
         method : "POST",
         headers: { "Content-Type": "application/json" },
         body   : JSON.stringify({
