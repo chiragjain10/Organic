@@ -27,11 +27,6 @@ const Account = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
     const fetchData = async () => {
       try {
         // Fetch User Profile

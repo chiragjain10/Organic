@@ -2,8 +2,9 @@ import "./App.css";
 import { useState, useEffect, lazy, Suspense } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import AuthProvider from "./components/AuthProvider";
+import { useAuth } from "./components/useAuth";
 import ScrollToTop from "./components/ScrollToTop";
 import Preloader from "./pages/Preloader";
 import ShopDataProvider from "./components/ShopDataProvider";
@@ -42,6 +43,18 @@ const RouteLoader = () => (
   </div>
 );
 
+// ── Protected Route ────────────────────────────────────────────────────────────
+// Waits for Firebase auth to finish initialising before deciding to redirect.
+// This prevents the "refresh → login" bug caused by user being null during
+// the brief window while Firebase restores the session from IndexedDB.
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <RouteLoader />;      // still initialising — show spinner
+  if (!user)  return <Navigate to="/login" replace />; // definitely not logged in
+  return children;
+};
+// ──────────────────────────────────────────────────────────────────────────────
+
 const AppRoutes = () => {
   const location = useLocation();
   const hideChrome =
@@ -63,16 +76,16 @@ const AppRoutes = () => {
           <Route path="/signup" element={<Signup />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/account" element={<Account />} />
+          <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/shop" element={<Shop />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/account/profile" element={<Profile />} />
-          <Route path="/account/addresses" element={<Addresses />} />
-          <Route path="/account/payments" element={<PaymentMethods />} />
-          <Route path="/account/notifications" element={<Notifications />} />
+          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+          <Route path="/account/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/account/addresses" element={<ProtectedRoute><Addresses /></ProtectedRoute>} />
+          <Route path="/account/payments" element={<ProtectedRoute><PaymentMethods /></ProtectedRoute>} />
+          <Route path="/account/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/product/:id/quickview" element={<QuickView />} />
           <Route path="/privacy" element={<Privacy />} />

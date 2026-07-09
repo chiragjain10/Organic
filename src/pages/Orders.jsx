@@ -67,13 +67,6 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
-  // Redirect unauthenticated users
-  useEffect(() => {
-    if (!user) {
-      navigate("/login?redirect=orders");
-    }
-  }, [user, navigate]);
-
   // Fetch orders from Firestore
   useEffect(() => {
     if (!user) return;
@@ -204,15 +197,17 @@ export default function Orders() {
                       </h4>
                       <div className="bg-[#F7F6F2] p-5 rounded-2xl">
                         <p className="text-sm font-bold text-[#1E3D2B]">
-                          {o.address?.firstName} {o.address?.lastName}
+                          {o.address?.firstName}
                         </p>
                         <p className="text-sm text-[#6B4F3F] mt-1">
                           {o.address?.line1}
-                          {o.address?.line2 && `, ${o.address.line2}`}
                         </p>
                         <p className="text-sm text-[#6B4F3F]">
-                          {o.address?.city}, {o.address?.state} {o.address?.zip}
+                          {o.address?.city}, {o.address?.state} — {o.address?.zip}
                         </p>
+                        {o.address?.phone && (
+                          <p className="text-sm text-[#6B4F3F] mt-1">📞 {o.address.phone}</p>
+                        )}
                       </div>
 
                       <div className="mt-6 pt-6 border-t border-[#1E3D2B]/10">
