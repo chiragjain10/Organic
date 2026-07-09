@@ -127,15 +127,7 @@ const Footer = () => {
 
           <div className="order-2 flex items-center gap-4">
             <div className="h-[1px] w-8 bg-[#1E3D2B]/10 hidden md:block"></div>
-            <a href="https://letskillify.com" target="_blank" rel="noopener noreferrer" className="group relative py-1">
-              <div className="flex items-center gap-2">
-                <span className="text-[9px] uppercase tracking-[0.3em] text-[#6B4F3F]/60 font-medium">Designed by</span>
-                <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#1E3D2B] group-hover:text-[#6E8B3D] transition-colors duration-500">
-                  LetsKillify<span className="text-[#6E8B3D]">.</span>
-                </span>
-              </div>
-              <span className="absolute bottom-0 left-0 w-full h-[1px] bg-[#6E8B3D] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></span>
-            </a>
+            
           </div>
 
           <div className="order-1 md:order-3">
