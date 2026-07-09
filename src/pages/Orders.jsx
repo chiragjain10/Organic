@@ -3,6 +3,7 @@ import { useAuth } from "../components/useAuth";
 import { db } from "../components/Firebase";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { Copy } from "lucide-react";
 
 // ─── Status badge config ──────────────────────────────────────────────────────
 const STATUS_STYLES = {
@@ -129,7 +130,7 @@ export default function Orders() {
                   {/* Header row */}
                   <div className="flex flex-col md:flex-row md:justify-between md:items-start border-b border-[#1E3D2B]/10 pb-6 gap-4">
                     <div>
-                      <p className="font-black text-xl text-[#1E3D2B]">Order #{o.id}</p>
+                      <p className="font-black text-xl text-[#1E3D2B]">Order #{o.orderId || o.id}</p>
                       <p className="text-sm text-[#6B4F3F] mt-1">
                         Placed on:{" "}
                         {o.createdAt?.toDate
@@ -143,6 +144,22 @@ export default function Orders() {
                       <p className="text-sm font-medium mt-2 flex items-center gap-2">
                         Status: <StatusBadge status={o.status} />
                       </p>
+                      {/* Transaction ID */}
+                      {o.payment?.txnId && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <span className="text-[10px] font-black uppercase tracking-[0.15em] text-[#6B4F3F]">Txn ID:</span>
+                          <span className="text-[11px] font-bold text-[#1E3D2B] font-mono bg-[#F7F6F2] px-2 py-0.5 rounded-lg">
+                            {o.payment.txnId}
+                          </span>
+                          <button
+                            onClick={() => navigator.clipboard.writeText(o.payment.txnId).catch(()=>{})}
+                            className="p-1 rounded-lg hover:bg-[#F7F6F2] text-[#6B4F3F] hover:text-[#1E3D2B] transition-colors"
+                            title="Copy Transaction ID"
+                          >
+                            <Copy size={12} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="md:text-right">
                       <p className="font-black text-2xl text-[#1E3D2B]">₹{o.total}</p>

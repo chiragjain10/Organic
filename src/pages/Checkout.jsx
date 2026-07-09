@@ -197,8 +197,29 @@ const Checkout = () => {
                 console.error("[EmailJS] Unexpected error:", emailErr);
               }
               // ─────────────────────────────────────────────────────────────
-              alert("🎉 Payment successful! Your order has been placed. A confirmation email has been sent.");
-              navigate("/orders");
+              navigate("/thank-you", {
+                state: {
+                  orderId     : order.orderId,
+                  txnId       : data.TXNID || "",
+                  total       : total.toFixed(2),
+                  customerName: form.name,
+                  items       : items.map((item) => ({
+                    id      : item.id || "",
+                    name    : item.title || item.name || "",
+                    image   : item.image || item.images?.[0] || "",
+                    price   : Number(item.price || 0),
+                    quantity: item.quantity || 1,
+                  })),
+                  address: {
+                    firstName: form.name,
+                    line1    : form.address,
+                    city     : form.city,
+                    state    : form.state,
+                    zip      : form.pincode,
+                    phone    : form.phone,
+                  },
+                },
+              });
             } else {
               alert("Payment was not completed. Status: " + (data.STATUS || "Unknown"));
               setLoading(false);

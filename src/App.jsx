@@ -33,6 +33,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const ReturnPolicy = lazy(() => import("./pages/ReturnPolicy"));
 const AdminLogin = lazy(() => import("./pages/Admin/AdminLogin"));
+const ThankYou   = lazy(() => import("./pages/ThankYou"));
 // const AdminSignup = lazy(() => import("./pages/Admin/AdminSignup"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -82,6 +83,7 @@ const AppRoutes = () => {
           <Route path="/shop" element={<Shop />} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+          <Route path="/thank-you" element={<ProtectedRoute><ThankYou /></ProtectedRoute>} />
           <Route path="/account/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/account/addresses" element={<ProtectedRoute><Addresses /></ProtectedRoute>} />
           <Route path="/account/payments" element={<ProtectedRoute><PaymentMethods /></ProtectedRoute>} />
