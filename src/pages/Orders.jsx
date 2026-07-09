@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../components/useAuth";
 import { db } from "../components/Firebase";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Copy } from "lucide-react";
+import { Copy, RefreshCw, AlertCircle } from "lucide-react";
 
 // ─── Status badge config ──────────────────────────────────────────────────────
 const STATUS_STYLES = {
@@ -65,27 +65,58 @@ export default function Orders() {
   const [searchParams, setSearchParams] = useSearchParams();
   const paymentStatus = searchParams.get("status"); // "success" | "failed" | null
 
-  const [orders, setOrders] = useState([]);
+  const [orders,        setOrders]        = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [orderError,    setOrderError]    = useState(null);
 
-  // Fetch orders from Firestore
+  // Real-time listener — orders appear instantly after checkout
   useEffect(() => {
     if (!user) return;
-    const load = async () => {
-      try {
-        const q = query(
-          collection(db, "users", user.uid, "orders"),
-          orderBy("createdAt", "desc")
-        );
-        const snap = await getDocs(q);
-        setOrders(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      } catch (e) {
-        console.error("Failed to load orders:", e.message);
-      } finally {
-        setLoadingOrders(false);
-      }
+
+    setLoadingOrders(true);
+    setOrderError(null);
+
+    let unsubscribe;
+
+    const subscribe = (withOrderBy = true) => {
+      const ref = collection(db, "users", user.uid, "orders");
+      const q   = withOrderBy ? query(ref, orderBy("createdAt", "desc")) : ref;
+
+      unsubscribe = onSnapshot(
+        q,
+        (snap) => {
+          let docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          // If no orderBy (fallback), sort client-side
+          if (!withOrderBy) {
+            docs = docs.sort((a, b) => {
+              const ta = a.createdAt?.toDate?.()?.getTime() || 0;
+              const tb = b.createdAt?.toDate?.()?.getTime() || 0;
+              return tb - ta;
+            });
+          }
+          setOrders(docs);
+          setLoadingOrders(false);
+        },
+        (err) => {
+          console.error("[Orders] Firestore error:", err.code, err.message);
+          if (withOrderBy && err.code === "failed-precondition") {
+            // Missing index — retry without orderBy, sort client-side
+            console.warn("[Orders] Index missing, falling back to client-side sort.");
+            if (unsubscribe) unsubscribe();
+            subscribe(false);
+          } else if (err.code === "permission-denied") {
+            setOrderError("permission-denied");
+            setLoadingOrders(false);
+          } else {
+            setOrderError("unknown");
+            setLoadingOrders(false);
+          }
+        }
+      );
     };
-    load();
+
+    subscribe(true);
+    return () => { if (unsubscribe) unsubscribe(); };
   }, [user]);
 
   // Dismiss banner by removing the status query param
@@ -104,7 +135,32 @@ export default function Orders() {
 
         {/* Orders list */}
         {loadingOrders ? (
-          <p className="text-[#6B4F3F]">Loading your orders…</p>
+          <div className="flex items-center gap-3 text-[#6B4F3F] py-8">
+            <div className="w-5 h-5 border-2 border-[#6E8B3D]/30 border-t-[#6E8B3D] rounded-full animate-spin" />
+            <span className="font-medium">Loading your orders…</span>
+          </div>
+        ) : orderError ? (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-8 flex items-start gap-4">
+            <AlertCircle size={24} className="text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-black text-red-800">
+                {orderError === "permission-denied"
+                  ? "Access denied — Firestore security rules are blocking this request."
+                  : "Could not load orders. Please try again."}
+              </p>
+              {orderError === "permission-denied" && (
+                <p className="text-red-600 text-sm mt-1">
+                  Open Firebase Console → Firestore → Rules and allow reads on <code className="bg-red-100 px-1 rounded">users/{uid}/orders</code>.
+                </p>
+              )}
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-red-100 text-red-700 font-bold text-sm hover:bg-red-200 transition-colors"
+              >
+                <RefreshCw size={14} /> Reload
+              </button>
+            </div>
+          </div>
         ) : orders.length === 0 ? (
           <div className="bg-white rounded-2xl border border-[#1E3D2B]/10 p-12 text-center">
             <p className="text-4xl mb-4">📦</p>
